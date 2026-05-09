@@ -1,26 +1,233 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import {
+  ShieldCheck, Clock4, Stethoscope, Microscope, ScanLine, HeartPulse,
+  ClipboardCheck, Phone, MessageCircle, ChevronRight, ArrowRight,
+} from "lucide-react";
+import { SiteLayout } from "@/components/site/SiteLayout";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchDiagnosticProfile, telLink, waLink } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Medline Diagnostics — Trusted Pathology & Imaging in Trichy" },
+      {
+        name: "description",
+        content:
+          "Walk-in diagnostic centre in Ponnagar, Trichy offering blood tests, ultrasound, X-Ray, CT, ECHO, TMT, PFT and health checkup packages.",
+      },
+    ],
+  }),
+  component: HomePage,
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
+const ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+  flask: Microscope, scan: ScanLine, "heart-pulse": HeartPulse, "clipboard-check": ClipboardCheck,
+};
+
+function HomePage() {
+  const { data: dp } = useQuery({ queryKey: ["dp"], queryFn: fetchDiagnosticProfile });
+  const { data: slides = [] } = useQuery({
+    queryKey: ["slides", "active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("slides").select("*").eq("is_active", true).order("sort_order");
+      if (error) throw error; return data;
+    },
+  });
+  const { data: groups = [] } = useQuery({
+    queryKey: ["mg", "active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("main_groups").select("*").eq("is_active", true).order("sort_order");
+      if (error) throw error; return data;
+    },
+  });
+  const { data: doctors = [] } = useQuery({
+    queryKey: ["doctors", "home"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("doctors").select("*").eq("show_on_home", true).eq("is_active", true).order("sort_order");
+      if (error) throw error; return data;
+    },
+  });
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <SiteLayout>
+      <Hero slides={slides} />
+
+      <TrustBar />
+
+      {/* Services snapshot */}
+      <section className="mx-auto max-w-7xl px-4 py-14">
+        <div className="mb-8 flex items-end justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-primary">Our Services</p>
+            <h2 className="mt-1 text-3xl font-bold md:text-4xl">Comprehensive diagnostics under one roof</h2>
+          </div>
+          <Link to="/services" className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline md:inline-flex">
+            View all <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {groups.map((g) => {
+            const Icon = ICON[g.icon || ""] || Stethoscope;
+            return (
+              <Link
+                key={g.id}
+                to="/services"
+                hash={g.slug}
+                className="group rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-elegant"
+              >
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Icon className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-semibold">{g.name}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{g.description}</p>
+                <div className="mt-4 inline-flex items-center text-sm font-medium text-primary">
+                  Explore <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Doctors */}
+      {doctors.length > 0 && (
+        <section className="bg-secondary/40 py-14">
+          <div className="mx-auto max-w-7xl px-4">
+            <div className="mb-8">
+              <p className="text-sm font-semibold uppercase tracking-wider text-primary">Our Specialists</p>
+              <h2 className="mt-1 text-3xl font-bold md:text-4xl">Experienced consultants you can trust</h2>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {doctors.map((d) => (
+                <article key={d.id} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+                  <div className="flex items-start gap-4">
+                    {d.photo_url && (
+                      <img src={d.photo_url} alt={d.name} className="h-20 w-20 rounded-full object-cover" loading="lazy" width={80} height={80} />
+                    )}
+                    <div>
+                      <h3 className="font-semibold">{d.name}</h3>
+                      <p className="text-sm text-muted-foreground">{d.qualification}</p>
+                      <p className="text-xs font-medium text-primary">{d.specialization}</p>
+                    </div>
+                  </div>
+                  {d.description && <p className="mt-4 text-sm text-muted-foreground">{d.description}</p>}
+                  {d.reg_no && <p className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">Reg No: {d.reg_no}</p>}
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CTA */}
+      <section className="mx-auto max-w-7xl px-4 py-14">
+        <div className="overflow-hidden rounded-3xl bg-gradient-hero p-8 text-primary-foreground shadow-elegant md:p-12">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-3xl font-bold md:text-4xl">Need a test or scan today?</h2>
+              <p className="mt-2 max-w-2xl text-primary-foreground/80">
+                Walk in or call us — most reports are ready the same day. We accept doctor referrals and direct walk-ins.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="lg" variant="secondary">
+                <a href={telLink(dp?.phone)} className="gap-2"><Phone className="h-5 w-5" /> Call Now</a>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+                <a href={waLink(dp?.whatsapp)} target="_blank" rel="noreferrer" className="gap-2"><MessageCircle className="h-5 w-5" /> WhatsApp</a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </SiteLayout>
   );
 }
 
-function Index() {
-  return <PlaceholderIndex />;
+function Hero({ slides }: { slides: any[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (slides.length < 2) return;
+    const t = setInterval(() => setI((v) => (v + 1) % slides.length), 5500);
+    return () => clearInterval(t);
+  }, [slides.length]);
+  if (slides.length === 0) return null;
+  return (
+    <section className="relative isolate overflow-hidden">
+      <div className="relative h-[78vh] min-h-[480px] max-h-[720px] w-full">
+        {slides.map((s, idx) => (
+          <div
+            key={s.id}
+            className={`absolute inset-0 transition-opacity duration-1000 ${idx === i ? "opacity-100" : "opacity-0"}`}
+          >
+            <img src={s.image_url} alt={s.heading || ""} className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-foreground/75 via-foreground/50 to-transparent" />
+          </div>
+        ))}
+        <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-4">
+          <div className="max-w-2xl text-background">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white backdrop-blur">
+              <ShieldCheck className="h-3.5 w-3.5" /> Trusted in Trichy
+            </p>
+            <h1 className="mt-4 font-display text-4xl font-bold leading-tight text-white md:text-6xl">
+              {slides[i]?.heading || "Modern Diagnostics, Caring Hands"}
+            </h1>
+            {slides[i]?.subtext && (
+              <p className="mt-4 max-w-xl text-lg text-white/90">{slides[i].subtext}</p>
+            )}
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <Link to="/services">Browse Services</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+                <Link to="/contact">Visit Us</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+        {slides.length > 1 && (
+          <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setI(idx)}
+                aria-label={`Slide ${idx + 1}`}
+                className={`h-1.5 rounded-full transition-all ${idx === i ? "w-8 bg-white" : "w-3 bg-white/50"}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TrustBar() {
+  const items = [
+    { icon: ShieldCheck, label: "NABL Aspirant", sub: "Quality first" },
+    { icon: Clock4, label: "Same-Day Reports", sub: "For most routine tests" },
+    { icon: Stethoscope, label: "Doctor Referrals", sub: "Walk-ins welcome" },
+    { icon: HeartPulse, label: "Cardiac & Pulmonary", sub: "ECHO, TMT, PFT" },
+  ];
+  return (
+    <section className="border-y border-border/60 bg-background">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 py-6 md:grid-cols-4">
+        {items.map(({ icon: Icon, label, sub }) => (
+          <div key={label} className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold">{label}</div>
+              <div className="text-xs text-muted-foreground">{sub}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
