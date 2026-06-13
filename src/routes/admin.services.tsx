@@ -165,7 +165,7 @@ function TestProfiles() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader><DialogTitle>{edit?.id ? "Edit" : "Add"} Profile</DialogTitle></DialogHeader>
           {edit && <ProfileForm item={edit} tests={tests} selected={items_} setSelected={setItems_}
-            onSave={async (p) => { try { await save(p, edit.id); toast.success("Saved"); setEdit(null); refresh(); } catch (e: any) { toast.error(e.message); } }} />}
+            onSave={async (p: any) => { try { await save(p, edit.id); toast.success("Saved"); setEdit(null); refresh(); } catch (e: any) { toast.error(e.message); } }} />}
         </DialogContent>
       </Dialog>
     </Section>
