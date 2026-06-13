@@ -42,8 +42,8 @@ function Services() {
 
 function useTable(name: string, key: string, order = "sort_order") {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: [key], queryFn: async () => (await supabase.from(name as any).select("*").order(order)).data || [] });
-  return { ...q, refresh: () => qc.invalidateQueries({ queryKey: [key] }) };
+  const q = useQuery<any[]>({ queryKey: [key], queryFn: async () => ((await (supabase.from(name as any) as any).select("*").order(order)).data as any[]) || [] });
+  return { ...q, data: (q.data ?? []) as any[], refresh: () => qc.invalidateQueries({ queryKey: [key] }) };
 }
 
 function ItemRow({ title, sub, onEdit, onDelete, active }: any) {
