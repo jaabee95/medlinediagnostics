@@ -58,8 +58,8 @@ function AdminLogin() {
         </div>
         <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</Button>
         <p className="text-center text-xs text-muted-foreground">
-          Default: <code className="rounded bg-muted px-1.5 py-0.5">Admin / Admin@123</code>
-        </p>
+  Authorized staff only
+</p>
       </form>
     </div>
   );
