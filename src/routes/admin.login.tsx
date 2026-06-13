@@ -31,7 +31,7 @@ function AdminLogin() {
     setLoading(false);
     if (error) { toast.error("Invalid credentials"); return; }
     toast.success("Welcome back");
-    navigate({ to: "/" });
+    navigate({ to: "/admin" });
   }
 
   return (
