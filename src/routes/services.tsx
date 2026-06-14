@@ -21,16 +21,22 @@ export const Route = createFileRoute("/services")({
 function ServicesPage() {
   const [q, setQ] = useState("");
   const { data: dp } = useQuery({ queryKey: ["dp"], queryFn: fetchDiagnosticProfile });
-  const { data = { groups: [], subs: [], tests: [], packages: [] } } = useQuery({
+  const { data = { groups: [], subs: [], tests: [], packages: [], packageItems: [], profiles: [], profileItems: [] } } = useQuery({
     queryKey: ["services-all"],
     queryFn: async () => {
-      const [g, s, t, p] = await Promise.all([
+      const [g, s, t, p, pi, tp, tpi] = await Promise.all([
         supabase.from("main_groups").select("*").eq("is_active", true).order("sort_order"),
         supabase.from("sub_groups").select("*").eq("is_active", true).order("sort_order"),
         supabase.from("tests").select("*").eq("is_active", true).order("sort_order"),
         supabase.from("packages").select("*").eq("is_visible", true).order("sort_order"),
+        supabase.from("package_items").select("*"),
+        supabase.from("test_profiles").select("*").eq("is_active", true).order("sort_order"),
+        supabase.from("test_profile_items").select("*"),
       ]);
-      return { groups: g.data || [], subs: s.data || [], tests: t.data || [], packages: p.data || [] };
+      return {
+        groups: g.data || [], subs: s.data || [], tests: t.data || [], packages: p.data || [],
+        packageItems: pi.data || [], profiles: tp.data || [], profileItems: tpi.data || [],
+      };
     },
   });
 
