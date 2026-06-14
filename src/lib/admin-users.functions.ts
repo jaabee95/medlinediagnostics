@@ -8,11 +8,12 @@ async function assertAdmin(supabase: any, userId: string) {
 
 export const createAdminUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { username: string; full_name: string; password: string }) => {
+  .inputValidator((d: { username: string; full_name: string; password: string; role?: "admin" | "staff" }) => {
     const username = (d.username || "").trim().toLowerCase();
     if (!/^[a-z0-9_]{3,32}$/.test(username)) throw new Error("Username must be 3-32 chars, a-z, 0-9, _");
     if ((d.password || "").length < 8) throw new Error("Password must be at least 8 characters");
-    return { username, full_name: d.full_name || "", password: d.password };
+    const role: "admin" | "staff" = d.role === "staff" ? "staff" : "admin";
+    return { username, full_name: d.full_name || "", password: d.password, role };
   })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -29,8 +30,29 @@ export const createAdminUser = createServerFn({ method: "POST" })
     await supabaseAdmin.from("profiles").upsert({
       id: uid, username: data.username, full_name: data.full_name, must_change_password: true, is_active: true,
     });
-    await supabaseAdmin.from("user_roles").upsert({ user_id: uid, role: "admin" });
-    return { id: uid, username: data.username };
+    await supabaseAdmin.from("user_roles").upsert({ user_id: uid, role: data.role });
+    return { id: uid, username: data.username, role: data.role };
+  });
+
+export const setUserPermissions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { user_id: string; permissions: { page_key: string; can_view: boolean; can_edit: boolean }[] }) => {
+    if (!d.user_id) throw new Error("user_id required");
+    if (!Array.isArray(d.permissions)) throw new Error("permissions array required");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("user_permissions").delete().eq("user_id", data.user_id);
+    const rows = data.permissions
+      .filter((p) => p.can_view || p.can_edit)
+      .map((p) => ({ user_id: data.user_id, page_key: p.page_key, can_view: p.can_view, can_edit: p.can_edit }));
+    if (rows.length) {
+      const { error } = await supabaseAdmin.from("user_permissions").insert(rows);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true, count: rows.length };
   });
 
 export const resetAdminPassword = createServerFn({ method: "POST" })
