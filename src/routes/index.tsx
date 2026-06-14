@@ -277,3 +277,85 @@ function TrustBar() {
     </section>
   );
 }
+
+function StatsStrip() {
+  const items = [
+    { icon: Award, value: "15+", label: "Years of service" },
+    { icon: FlaskConical, value: "500+", label: "Tests & scans" },
+    { icon: Users, value: "1L+", label: "Patients served" },
+    { icon: Activity, value: "24×7", label: "Emergency support" },
+  ];
+  return (
+    <section className="bg-gradient-soft">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 md:grid-cols-4">
+        {items.map(({ icon: Icon, value, label }) => (
+          <div key={label} className="flex flex-col items-center text-center">
+            <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Icon className="h-6 w-6" />
+            </div>
+            <div className="font-display text-3xl font-bold text-foreground">{value}</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function WhyChooseUs() {
+  const items = [
+    { icon: BadgeCheck, title: "Accuracy you can trust", body: "Calibrated equipment, internal QC and trained technicians on every shift." },
+    { icon: Clock4, title: "Fast turnaround", body: "Most pathology reports within 4–6 hours; imaging same day." },
+    { icon: Wallet, title: "Transparent pricing", body: "Clear rates with no hidden charges. Health package discounts available." },
+    { icon: Stethoscope, title: "Doctor-friendly", body: "Direct hotline for referring physicians and structured digital reports." },
+  ];
+  return (
+    <section className="border-y border-border/60 bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-14">
+        <div className="mb-10 max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Why Medline</p>
+          <h2 className="mt-1 text-3xl font-bold md:text-4xl">Care that's accurate, prompt and personal</h2>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+              <Icon className="h-7 w-7 text-primary" />
+              <h3 className="mt-4 font-semibold">{title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  const items = [
+    { name: "Revathi S.", role: "Patient, Ponnagar", body: "Got my entire master health checkup done in under 3 hours. Staff were warm and the report was clearly explained." },
+    { name: "Dr. Karthik R.", role: "Consulting Physician", body: "Reliable reports with quick TAT. I refer my patients confidently for ECHO and TMT." },
+    { name: "Anand P.", role: "Patient, Srirangam", body: "Prices were reasonable and they shared the report on WhatsApp the same evening. Recommended." },
+  ];
+  return (
+    <section className="bg-secondary/40 py-14">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="mb-10 max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">What people say</p>
+          <h2 className="mt-1 text-3xl font-bold md:text-4xl">Trusted by patients and physicians across Trichy</h2>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {items.map((t) => (
+            <figure key={t.name} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+              <Quote className="h-7 w-7 text-primary/60" />
+              <blockquote className="mt-3 text-sm leading-relaxed text-foreground/85">"{t.body}"</blockquote>
+              <figcaption className="mt-5">
+                <div className="font-semibold">{t.name}</div>
+                <div className="text-xs text-muted-foreground">{t.role}</div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
