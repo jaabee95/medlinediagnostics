@@ -1,0 +1,10 @@
+GRANT SELECT ON public.slides, public.doctors, public.main_groups, public.sub_groups, public.tests, public.test_profiles, public.test_profile_items, public.packages, public.package_items, public.diagnostic_profile TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.slides, public.doctors, public.main_groups, public.sub_groups, public.tests, public.test_profiles, public.test_profile_items, public.packages, public.package_items, public.diagnostic_profile TO authenticated;
+GRANT ALL ON public.slides, public.doctors, public.main_groups, public.sub_groups, public.tests, public.test_profiles, public.test_profile_items, public.packages, public.package_items, public.diagnostic_profile TO service_role;
+GRANT INSERT ON public.enquiries TO anon, authenticated;
+GRANT SELECT, UPDATE, DELETE ON public.enquiries TO authenticated;
+GRANT ALL ON public.enquiries TO service_role;
+GRANT SELECT, UPDATE ON public.profiles TO authenticated;
+GRANT ALL ON public.profiles TO service_role;
+GRANT SELECT ON public.user_roles TO authenticated;
+GRANT ALL ON public.user_roles TO service_role;
