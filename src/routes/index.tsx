@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   ShieldCheck, Clock4, Stethoscope, Microscope, ScanLine, HeartPulse,
   ClipboardCheck, Phone, MessageCircle, ChevronRight, ArrowRight,
+  Award, Users, FlaskConical, Activity, Quote, BadgeCheck, Wallet, Sparkles,
 } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
@@ -51,12 +52,21 @@ function HomePage() {
       if (error) throw error; return data;
     },
   });
+  const { data: packages = [] } = useQuery({
+    queryKey: ["packages", "home"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("packages").select("*").eq("is_visible", true).order("sort_order").limit(3);
+      if (error) throw error; return data;
+    },
+  });
 
   return (
     <SiteLayout>
       <Hero slides={slides} />
 
       <TrustBar />
+
+      <StatsStrip />
 
       {/* Services snapshot */}
       <section className="mx-auto max-w-7xl px-4 py-14">
@@ -93,6 +103,40 @@ function HomePage() {
         </div>
       </section>
 
+      <WhyChooseUs />
+
+      {/* Packages teaser */}
+      {packages.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-14">
+          <div className="mb-8 flex items-end justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wider text-primary">Health Packages</p>
+              <h2 className="mt-1 text-3xl font-bold md:text-4xl">Preventive checkups, thoughtfully bundled</h2>
+            </div>
+            <Link to="/services" hash="packages" className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline md:inline-flex">
+              See all packages <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="grid gap-5 md:grid-cols-3">
+            {packages.map((p) => (
+              <article key={p.id} className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:-translate-y-1 hover:shadow-elegant">
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10" />
+                <Sparkles className="relative h-6 w-6 text-primary" />
+                <h3 className="relative mt-4 text-lg font-semibold">{p.name}</h3>
+                {p.description && <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">{p.description}</p>}
+                <div className="relative mt-5 flex items-center justify-between">
+                  {p.price != null && <span className="text-2xl font-bold text-primary">₹{Number(p.price).toLocaleString("en-IN")}</span>}
+                  <Button asChild size="sm">
+                    <a href={waLink(dp?.whatsapp, `I'm interested in the ${p.name} package.`)} target="_blank" rel="noreferrer">Enquire</a>
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+
       {/* Doctors */}
       {doctors.length > 0 && (
         <section className="bg-secondary/40 py-14">
@@ -122,6 +166,8 @@ function HomePage() {
           </div>
         </section>
       )}
+
+      <Testimonials />
 
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-4 py-14">
@@ -227,6 +273,88 @@ function TrustBar() {
             </div>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function StatsStrip() {
+  const items = [
+    { icon: Award, value: "15+", label: "Years of service" },
+    { icon: FlaskConical, value: "500+", label: "Tests & scans" },
+    { icon: Users, value: "1L+", label: "Patients served" },
+    { icon: Activity, value: "24×7", label: "Emergency support" },
+  ];
+  return (
+    <section className="bg-gradient-soft">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 md:grid-cols-4">
+        {items.map(({ icon: Icon, value, label }) => (
+          <div key={label} className="flex flex-col items-center text-center">
+            <div className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Icon className="h-6 w-6" />
+            </div>
+            <div className="font-display text-3xl font-bold text-foreground">{value}</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function WhyChooseUs() {
+  const items = [
+    { icon: BadgeCheck, title: "Accuracy you can trust", body: "Calibrated equipment, internal QC and trained technicians on every shift." },
+    { icon: Clock4, title: "Fast turnaround", body: "Most pathology reports within 4–6 hours; imaging same day." },
+    { icon: Wallet, title: "Transparent pricing", body: "Clear rates with no hidden charges. Health package discounts available." },
+    { icon: Stethoscope, title: "Doctor-friendly", body: "Direct hotline for referring physicians and structured digital reports." },
+  ];
+  return (
+    <section className="border-y border-border/60 bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-14">
+        <div className="mb-10 max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Why Medline</p>
+          <h2 className="mt-1 text-3xl font-bold md:text-4xl">Care that's accurate, prompt and personal</h2>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+              <Icon className="h-7 w-7 text-primary" />
+              <h3 className="mt-4 font-semibold">{title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  const items = [
+    { name: "Revathi S.", role: "Patient, Ponnagar", body: "Got my entire master health checkup done in under 3 hours. Staff were warm and the report was clearly explained." },
+    { name: "Dr. Karthik R.", role: "Consulting Physician", body: "Reliable reports with quick TAT. I refer my patients confidently for ECHO and TMT." },
+    { name: "Anand P.", role: "Patient, Srirangam", body: "Prices were reasonable and they shared the report on WhatsApp the same evening. Recommended." },
+  ];
+  return (
+    <section className="bg-secondary/40 py-14">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="mb-10 max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">What people say</p>
+          <h2 className="mt-1 text-3xl font-bold md:text-4xl">Trusted by patients and physicians across Trichy</h2>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {items.map((t) => (
+            <figure key={t.name} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+              <Quote className="h-7 w-7 text-primary/60" />
+              <blockquote className="mt-3 text-sm leading-relaxed text-foreground/85">"{t.body}"</blockquote>
+              <figcaption className="mt-5">
+                <div className="font-semibold">{t.name}</div>
+                <div className="text-xs text-muted-foreground">{t.role}</div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
       </div>
     </section>
   );

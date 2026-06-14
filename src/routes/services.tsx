@@ -58,7 +58,30 @@ function ServicesPage() {
         </div>
       </section>
 
+      {/* Sticky category tabs */}
+      {data.groups.length > 0 && (
+        <nav className="sticky top-16 z-20 border-b border-border bg-background/85 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-3">
+            {data.groups.map((g) => (
+              <a
+                key={g.id}
+                href={`#${g.slug}`}
+                className="whitespace-nowrap rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground/80 transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                {g.name}
+              </a>
+            ))}
+            {data.packages.length > 0 && (
+              <a href="#packages" className="whitespace-nowrap rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground">
+                Packages
+              </a>
+            )}
+          </div>
+        </nav>
+      )}
+
       <div className="mx-auto max-w-7xl px-4 py-12 space-y-12">
+
         {data.groups.map((g) => (
           <section key={g.id} id={g.slug} className="scroll-mt-24">
             <h2 className="text-2xl font-bold md:text-3xl">{g.name}</h2>
