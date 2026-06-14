@@ -330,8 +330,6 @@ function WhyChooseUs() {
   );
 }
 
-import { Star } from "lucide-react";
-
 function Testimonials() {
   const fallback = [
     { id: "f1", name: "Revathi S.", message: "Got my entire master health checkup done in under 3 hours. Staff were warm and the report was clearly explained.", rating: 5, photo_url: null },
