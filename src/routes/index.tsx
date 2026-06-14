@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   ShieldCheck, Clock4, Stethoscope, Microscope, ScanLine, HeartPulse,
   ClipboardCheck, Phone, MessageCircle, ChevronRight, ArrowRight,
-  Award, Users, FlaskConical, Activity, Quote, BadgeCheck, Wallet, Sparkles,
+  Award, Users, FlaskConical, Activity, Quote, BadgeCheck, Wallet, Sparkles, Star,
 } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
@@ -331,26 +331,56 @@ function WhyChooseUs() {
 }
 
 function Testimonials() {
-  const items = [
-    { name: "Revathi S.", role: "Patient, Ponnagar", body: "Got my entire master health checkup done in under 3 hours. Staff were warm and the report was clearly explained." },
-    { name: "Dr. Karthik R.", role: "Consulting Physician", body: "Reliable reports with quick TAT. I refer my patients confidently for ECHO and TMT." },
-    { name: "Anand P.", role: "Patient, Srirangam", body: "Prices were reasonable and they shared the report on WhatsApp the same evening. Recommended." },
+  const fallback = [
+    { id: "f1", name: "Revathi S.", message: "Got my entire master health checkup done in under 3 hours. Staff were warm and the report was clearly explained.", rating: 5, photo_url: null },
+    { id: "f2", name: "Dr. Karthik R.", message: "Reliable reports with quick TAT. I refer my patients confidently for ECHO and TMT.", rating: 5, photo_url: null },
+    { id: "f3", name: "Anand P.", message: "Prices were reasonable and they shared the report on WhatsApp the same evening. Recommended.", rating: 5, photo_url: null },
   ];
+
+  const { data: featured = [] } = useQuery({
+    queryKey: ["reviews", "featured"],
+    queryFn: async () => {
+      // featured first; fall back to approved
+      const { data: f } = await supabase.from("reviews").select("*").eq("is_approved", true).eq("is_featured", true).order("created_at", { ascending: false }).limit(6);
+      if (f && f.length) return f;
+      const { data: a } = await supabase.from("reviews").select("*").eq("is_approved", true).order("created_at", { ascending: false }).limit(6);
+      return a || [];
+    },
+  });
+
+  const items: any[] = featured.length ? featured : fallback;
+
   return (
     <section className="bg-secondary/40 py-14">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="mb-10 max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">What people say</p>
-          <h2 className="mt-1 text-3xl font-bold md:text-4xl">Trusted by patients and physicians across Trichy</h2>
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-wider text-primary">What people say</p>
+            <h2 className="mt-1 text-3xl font-bold md:text-4xl">Trusted by patients and physicians across Trichy</h2>
+          </div>
+          <Button asChild variant="outline"><Link to="/reviews">Write a review</Link></Button>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {items.map((t) => (
-            <figure key={t.name} className="rounded-2xl border border-border bg-card p-6 shadow-card">
-              <Quote className="h-7 w-7 text-primary/60" />
-              <blockquote className="mt-3 text-sm leading-relaxed text-foreground/85">"{t.body}"</blockquote>
-              <figcaption className="mt-5">
-                <div className="font-semibold">{t.name}</div>
-                <div className="text-xs text-muted-foreground">{t.role}</div>
+          {items.map((t: any) => (
+            <figure key={t.id} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+              <div className="flex">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className={`h-4 w-4 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+                ))}
+              </div>
+              <blockquote className="mt-3 text-sm leading-relaxed text-foreground/85">"{t.message}"</blockquote>
+              <figcaption className="mt-5 flex items-center gap-3">
+                {t.photo_url ? (
+                  <img src={t.photo_url} alt={t.name} className="h-10 w-10 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                    {t.name?.[0]?.toUpperCase() || "?"}
+                  </div>
+                )}
+                <div>
+                  <div className="font-semibold">{t.name}</div>
+                  <div className="text-xs text-muted-foreground">Patient review</div>
+                </div>
               </figcaption>
             </figure>
           ))}

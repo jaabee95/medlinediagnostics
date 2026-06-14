@@ -21,16 +21,22 @@ export const Route = createFileRoute("/services")({
 function ServicesPage() {
   const [q, setQ] = useState("");
   const { data: dp } = useQuery({ queryKey: ["dp"], queryFn: fetchDiagnosticProfile });
-  const { data = { groups: [], subs: [], tests: [], packages: [] } } = useQuery({
+  const { data = { groups: [], subs: [], tests: [], packages: [], packageItems: [], profiles: [], profileItems: [] } } = useQuery({
     queryKey: ["services-all"],
     queryFn: async () => {
-      const [g, s, t, p] = await Promise.all([
+      const [g, s, t, p, pi, tp, tpi] = await Promise.all([
         supabase.from("main_groups").select("*").eq("is_active", true).order("sort_order"),
         supabase.from("sub_groups").select("*").eq("is_active", true).order("sort_order"),
         supabase.from("tests").select("*").eq("is_active", true).order("sort_order"),
         supabase.from("packages").select("*").eq("is_visible", true).order("sort_order"),
+        supabase.from("package_items").select("*"),
+        supabase.from("test_profiles").select("*").eq("is_active", true).order("sort_order"),
+        supabase.from("test_profile_items").select("*"),
       ]);
-      return { groups: g.data || [], subs: s.data || [], tests: t.data || [], packages: p.data || [] };
+      return {
+        groups: g.data || [], subs: s.data || [], tests: t.data || [], packages: p.data || [],
+        packageItems: pi.data || [], profiles: tp.data || [], profileItems: tpi.data || [],
+      };
     },
   });
 
@@ -132,19 +138,60 @@ function ServicesPage() {
         {data.packages.length > 0 && (
           <section id="packages" className="scroll-mt-24">
             <h2 className="text-2xl font-bold md:text-3xl">Health Checkup Packages</h2>
+            <p className="mt-1 text-muted-foreground">Curated bundles of tests and profiles at a discounted price.</p>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {data.packages.map((p) => (
-                <article key={p.id} className="rounded-2xl border border-border bg-gradient-soft p-6 shadow-card">
-                  <h3 className="text-lg font-semibold">{p.name}</h3>
-                  {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
-                  <div className="mt-4 flex items-center justify-between">
-                    {p.price != null && <span className="text-2xl font-bold text-primary">₹{Number(p.price).toLocaleString("en-IN")}</span>}
-                    <Button asChild>
-                      <a href={waLink(dp?.whatsapp, `I'm interested in the ${p.name} package.`)} target="_blank" rel="noreferrer">Enquire</a>
-                    </Button>
-                  </div>
-                </article>
-              ))}
+              {data.packages.map((p) => {
+                const items = data.packageItems.filter((x: any) => x.package_id === p.id);
+                const profiles = items.filter((x: any) => x.item_type === "profile")
+                  .map((x: any) => data.profiles.find((pr: any) => pr.id === x.item_id))
+                  .filter(Boolean);
+                const tests = items.filter((x: any) => x.item_type === "test")
+                  .map((x: any) => data.tests.find((t: any) => t.id === x.item_id))
+                  .filter(Boolean);
+                return (
+                  <article key={p.id} className="rounded-2xl border border-border bg-gradient-soft p-6 shadow-card">
+                    <h3 className="text-lg font-semibold">{p.name}</h3>
+                    {p.description && <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>}
+
+                    {(profiles.length > 0 || tests.length > 0) && (
+                      <div className="mt-4 space-y-3 text-sm">
+                        {profiles.map((pr: any) => {
+                          const profileTests = data.profileItems
+                            .filter((x: any) => x.profile_id === pr.id)
+                            .map((x: any) => data.tests.find((t: any) => t.id === x.test_id))
+                            .filter(Boolean);
+                          return (
+                            <details key={pr.id} className="rounded-lg bg-card/60 p-3">
+                              <summary className="cursor-pointer font-medium">
+                                {pr.name}{" "}
+                                <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase text-primary">Profile · {profileTests.length} tests</span>
+                              </summary>
+                              <ul className="mt-2 list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+                                {profileTests.map((t: any) => <li key={t.id}>{t.name}</li>)}
+                              </ul>
+                            </details>
+                          );
+                        })}
+                        {tests.length > 0 && (
+                          <div className="rounded-lg bg-card/60 p-3">
+                            <div className="font-medium">Individual tests included</div>
+                            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+                              {tests.map((t: any) => <li key={t.id}>{t.name}</li>)}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
+                      {p.price != null && <span className="text-2xl font-bold text-primary">₹{Number(p.price).toLocaleString("en-IN")}</span>}
+                      <Button asChild>
+                        <a href={waLink(dp?.whatsapp, `I'm interested in the ${p.name} package.`)} target="_blank" rel="noreferrer">Enquire</a>
+                      </Button>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </section>
         )}

@@ -133,6 +133,9 @@ export type Database = {
           message: string
           name: string
           phone: string
+          remarks: string | null
+          resolved_at: string | null
+          resolved_by: string | null
           status: string
         }
         Insert: {
@@ -142,6 +145,9 @@ export type Database = {
           message: string
           name: string
           phone: string
+          remarks?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
         }
         Update: {
@@ -151,6 +157,9 @@ export type Database = {
           message?: string
           name?: string
           phone?: string
+          remarks?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
         }
         Relationships: []
@@ -280,6 +289,42 @@ export type Database = {
           must_change_password?: boolean
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string
+          id: string
+          is_approved: boolean
+          is_featured: boolean
+          message: string
+          name: string
+          photo_url: string | null
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          is_featured?: boolean
+          message: string
+          name: string
+          photo_url?: string | null
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          is_featured?: boolean
+          message?: string
+          name?: string
+          photo_url?: string | null
+          rating?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -485,6 +530,33 @@ export type Database = {
           },
         ]
       }
+      user_permissions: {
+        Row: {
+          can_edit: boolean
+          can_view: boolean
+          created_at: string
+          page_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string
+          page_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_edit?: boolean
+          can_view?: boolean
+          created_at?: string
+          page_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -511,6 +583,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_page_permission: {
+        Args: { _need_edit?: boolean; _page: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -521,7 +597,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "editor"
+      app_role: "admin" | "editor" | "staff"
       package_item_type: "test" | "profile"
     }
     CompositeTypes: {
@@ -650,7 +726,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "editor"],
+      app_role: ["admin", "editor", "staff"],
       package_item_type: ["test", "profile"],
     },
   },
