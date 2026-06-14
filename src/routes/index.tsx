@@ -66,6 +66,8 @@ function HomePage() {
 
       <TrustBar />
 
+      <StatsStrip />
+
       {/* Services snapshot */}
       <section className="mx-auto max-w-7xl px-4 py-14">
         <div className="mb-8 flex items-end justify-between">
