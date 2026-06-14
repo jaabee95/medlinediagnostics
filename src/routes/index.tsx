@@ -103,6 +103,40 @@ function HomePage() {
         </div>
       </section>
 
+      <WhyChooseUs />
+
+      {/* Packages teaser */}
+      {packages.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-14">
+          <div className="mb-8 flex items-end justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wider text-primary">Health Packages</p>
+              <h2 className="mt-1 text-3xl font-bold md:text-4xl">Preventive checkups, thoughtfully bundled</h2>
+            </div>
+            <Link to="/services" hash="packages" className="hidden items-center gap-1 text-sm font-medium text-primary hover:underline md:inline-flex">
+              See all packages <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="grid gap-5 md:grid-cols-3">
+            {packages.map((p) => (
+              <article key={p.id} className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:-translate-y-1 hover:shadow-elegant">
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10" />
+                <Sparkles className="relative h-6 w-6 text-primary" />
+                <h3 className="relative mt-4 text-lg font-semibold">{p.name}</h3>
+                {p.description && <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">{p.description}</p>}
+                <div className="relative mt-5 flex items-center justify-between">
+                  {p.price != null && <span className="text-2xl font-bold text-primary">₹{Number(p.price).toLocaleString("en-IN")}</span>}
+                  <Button asChild size="sm">
+                    <a href={waLink(dp?.whatsapp, `I'm interested in the ${p.name} package.`)} target="_blank" rel="noreferrer">Enquire</a>
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+
       {/* Doctors */}
       {doctors.length > 0 && (
         <section className="bg-secondary/40 py-14">
