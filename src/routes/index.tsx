@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   ShieldCheck, Clock4, Stethoscope, Microscope, ScanLine, HeartPulse,
   ClipboardCheck, Phone, MessageCircle, ChevronRight, ArrowRight,
-  Award, Users, FlaskConical, Activity, Quote, BadgeCheck, Wallet, Sparkles,
+  Award, Users, FlaskConical, Activity, Quote, BadgeCheck, Wallet, Sparkles, Star,
 } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
