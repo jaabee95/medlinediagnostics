@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -231,11 +231,12 @@ function SimpleDialog({ open, onClose, title, item, fields, table, onSaved, acti
   const [f, setF] = useState<any>({});
   const isEdit = item && item.id;
 
-  function init() {
+  useEffect(() => {
+    if (!open) return;
     const base: any = { sort_order: 10, [activeKey]: true };
     fields.forEach((fd: any) => (base[fd.k] = ""));
     setF(isEdit ? { ...base, ...item } : base);
-  }
+  }, [open, item?.id]);
 
   async function save() {
     const payload: any = { [activeKey]: f[activeKey] ?? true, sort_order: f.sort_order ?? 10 };
@@ -255,7 +256,7 @@ function SimpleDialog({ open, onClose, title, item, fields, table, onSaved, acti
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else init(); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>{isEdit ? "Edit" : "Add"} {title}</DialogTitle></DialogHeader>
         <div className="space-y-3">
