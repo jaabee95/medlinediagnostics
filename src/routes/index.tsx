@@ -52,6 +52,13 @@ function HomePage() {
       if (error) throw error; return data;
     },
   });
+  const { data: packages = [] } = useQuery({
+    queryKey: ["packages", "home"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("packages").select("*").eq("is_visible", true).order("sort_order").limit(3);
+      if (error) throw error; return data;
+    },
+  });
 
   return (
     <SiteLayout>
