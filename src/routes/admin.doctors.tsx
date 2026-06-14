@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,9 +84,10 @@ function DoctorDialog({ open, doctor, nextOrder, onClose, onSaved }: any) {
   const [busy, setBusy] = useState(false);
   const isEdit = doctor && doctor.id;
 
-  function init() {
+  useEffect(() => {
+    if (!open) return;
     setForm(isEdit ? { ...doctor } : { name: "", reg_no: "", qualification: "", specialization: "", photo_url: "", description: "", show_on_home: false, is_active: true, sort_order: nextOrder });
-  }
+  }, [open, doctor?.id]);
 
   async function upload(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; if (!f) return;
@@ -108,7 +109,7 @@ function DoctorDialog({ open, doctor, nextOrder, onClose, onSaved }: any) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else init(); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>{isEdit ? "Edit" : "Add"} Doctor</DialogTitle></DialogHeader>
         <div className="space-y-3">

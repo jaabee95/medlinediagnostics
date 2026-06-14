@@ -46,8 +46,8 @@ function ProfileForm() {
 
   if (!data) return <div className="text-sm text-muted-foreground">Loading…</div>;
 
-  const F = ({ k, label, type = "text" }: { k: string; label: string; type?: string }) => (
-    <div className="space-y-1.5">
+  const field = (k: string, label: string, type = "text") => (
+    <div className="space-y-1.5" key={k}>
       <Label htmlFor={k}>{label}</Label>
       <Input id={k} type={type} value={form[k] ?? ""} onChange={(e) => set(k, e.target.value)} />
     </div>
@@ -58,21 +58,21 @@ function ProfileForm() {
       <Card className="lg:col-span-2">
         <CardHeader><CardTitle className="text-base">Centre Details</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <F k="name" label="Name" />
-          <F k="tagline" label="Tagline" />
+          {field("name", "Name")}
+          {field("tagline", "Tagline")}
           <div className="sm:col-span-2 space-y-1.5">
             <Label>Address</Label>
             <Textarea rows={2} value={form.address ?? ""} onChange={(e) => set("address", e.target.value)} />
           </div>
-          <F k="phone" label="Phone" />
-          <F k="whatsapp" label="WhatsApp" />
-          <F k="email" label="Email" type="email" />
-          <F k="entity_type" label="Entity Type" />
-          <F k="registration_no" label="Registration No." />
-          <F k="nabl_status" label="NABL Status" />
-          <F k="nabl_reg_no" label="NABL Reg No." />
-          <F k="nabl_valid_until" label="NABL Valid Until" type="date" />
-          <div className="sm:col-span-2"><F k="map_url" label="Google Maps URL" /></div>
+          {field("phone", "Phone")}
+          {field("whatsapp", "WhatsApp")}
+          {field("email", "Email", "email")}
+          {field("entity_type", "Entity Type")}
+          {field("registration_no", "Registration No.")}
+          {field("nabl_status", "NABL Status")}
+          {field("nabl_reg_no", "NABL Reg No.")}
+          {field("nabl_valid_until", "NABL Valid Until", "date")}
+          <div className="sm:col-span-2">{field("map_url", "Google Maps URL")}</div>
           <div className="sm:col-span-2 space-y-1.5">
             <Label>About Text</Label>
             <Textarea rows={4} value={form.about_text ?? ""} onChange={(e) => set("about_text", e.target.value)} />
