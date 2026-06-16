@@ -1,47 +1,32 @@
-## Issues & root causes
+# Why your GitHub changes aren't showing in preview
 
-**1. Homepage slider and doctors section don't appear**
-The home page only renders a slide if `slides.length > 0` and the doctors block if `doctors.length > 0`. Both queries filter on `is_active = true` (and `show_on_home = true` for doctors). The most likely cause is missing public-read RLS policies on `slides`, `doctors`, and `main_groups` — when not signed in, the browser silently gets 0 rows. (Less likely: the seed shipped with `is_active=false`.) I will verify with a quick query, then fix whichever is wrong.
+The Lovable preview runs from the code in **Lovable's workspace sandbox**, not directly from GitHub. Sync is supposed to be two-way, but it can fall out of sync when:
 
-**2. Edit dialogs in admin show empty fields instead of existing data**
-In `admin.slides.tsx`, `admin.doctors.tsx`, and `admin.services.tsx` (SimpleDialog + TestProfiles dialog), the form state is initialised inside Radix's `onOpenChange={(o) => o ? init() : onClose()}`. Radix only fires `onOpenChange` when the dialog opens/closes from user interaction (Escape, outside-click) — **not** when the parent toggles the `open` prop. Clicking the pencil icon sets `open=true` programmatically, so `init()` never runs and the form stays `{}`.
+1. The GitHub integration was disconnected, or the repo was changed/renamed.
+2. You pushed to a branch other than the one Lovable tracks (Lovable syncs the **default branch only** — usually `main`).
+3. A push happened during a Lovable edit, causing a merge conflict that paused sync.
+4. The dev sandbox cached an older state and needs a restart.
 
-**3. Cursor disappears after every keystroke in Diagnostic Profile**
-`src/routes/admin.profile.tsx` defines a helper component `F` **inside** `ProfileForm`. Every keystroke triggers a re-render, which creates a brand-new `F` function identity, so React unmounts the old `<F/>` and mounts a new one — the underlying `<Input>` is re-created each keystroke and loses focus.
+## Plan to fix
 
-## Fixes
+1. **Verify the GitHub connection**
+   - Open the **+** menu (bottom left of chat) → **GitHub** → confirm the repo `jaabee95/medlinediagnostics` is connected.
+   - Confirm Lovable is tracking the branch you actually pushed to (default = `main`). If you pushed to another branch, merge it into `main`.
 
-### a. Homepage visibility
-- Open Supabase and check (i) row counts and `is_active` flags on `slides`, `doctors`, `main_groups`, and (ii) the SELECT policies on those tables.
-- If a public SELECT policy is missing on the active-rows path, add a migration that grants `SELECT` to `anon` + `authenticated` with `USING (is_active = true)` (and `show_on_home = true` for doctors where appropriate). Same for `main_groups`.
-- If rows exist but `is_active` is false, update the seed rows so the homepage actually has content.
+2. **Check for sync errors**
+   - In the same GitHub panel, look for any "sync failed / conflict" banner. If present, resolve the conflict on GitHub (accept your version), then re-trigger sync.
 
-### b. Edit dialogs prefill correctly
-Replace the "init in `onOpenChange`" pattern with a `useEffect` that runs when the dialog opens or the editing item changes. Files to update:
-- `src/routes/admin.slides.tsx` → `SlideDialog`
-- `src/routes/admin.doctors.tsx` → `DoctorDialog`
-- `src/routes/admin.services.tsx` → `SimpleDialog` (Main/Sub/Tests/Packages) and the TestProfiles `ProfileForm` (already takes `item` prop, but verify it resets when `item` changes)
+3. **Force the sandbox to pull the latest commit**
+   - I will restart the Lovable dev server so it re-reads files from the synced workspace. If files are already synced, your changes will appear immediately in preview.
 
-Pattern:
-```tsx
-useEffect(() => {
-  if (!open) return;
-  setForm(isEdit ? { ...item } : defaults);
-}, [open, item?.id]);
-```
-Also keep the `onOpenChange` close handler simple: `(o) => { if (!o) onClose(); }`.
+4. **If files still don't appear in the Lovable Code view**
+   - Sync is broken at the integration level. Quickest recovery: disconnect GitHub from the project, then reconnect and choose **Pull from GitHub** so Lovable overwrites its sandbox with your repo's current state.
 
-### c. Stop focus loss in Diagnostic Profile
-In `src/routes/admin.profile.tsx`, remove the inline `F` helper defined inside `ProfileForm`. Either:
-- inline each `<div><Label/><Input/></div>` block in JSX, or
-- move `F` to module scope and pass `value` + `onChange` as props (no closure over `form`/`set`).
+5. **Hosting note**
+   - Your Cloudflare deployment is independent of Lovable preview. Even after preview is fixed, Cloudflare only updates when its own build runs against your repo. They are two separate environments.
 
-This stops React from remounting the input on every keystroke and the cursor stays put.
+## What I need from you to proceed
 
-## Out of scope
-No changes to public site visuals, no new modules, no schema changes beyond an RLS policy patch if one is genuinely missing.
-
-## Verification
-- Sign out, reload `/` → slider and doctors block render.
-- In admin, open "Edit" on a slide / doctor / main group / test → existing fields are populated.
-- Type into any field on `/admin/profile` → cursor stays in the input through the whole word.
+Reply with either:
+- **"Restart and check"** — I'll restart the dev server and report what the sandbox actually contains vs. your GitHub repo.
+- **"Reconnect GitHub"** — if you've already confirmed sync is broken, I'll guide you through the disconnect/reconnect + pull step (you have to click those in the UI; I can't do it for you).
