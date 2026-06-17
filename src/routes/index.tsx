@@ -254,7 +254,7 @@ function Hero({ slides }: { slides: any[] }) {
 
 function TrustBar() {
   const items = [
-    { icon: ShieldCheck, label: "NABL Aspirant", sub: "Quality first" },
+    { icon: ShieldCheck, label: "NABL Approved", sub: "Quality first" },
     { icon: Clock4, label: "Same-Day Reports", sub: "For most routine tests" },
     { icon: Stethoscope, label: "Doctor Referrals", sub: "Walk-ins welcome" },
     { icon: HeartPulse, label: "Cardiac & Pulmonary", sub: "ECHO, TMT, PFT" },
@@ -282,7 +282,7 @@ function StatsStrip() {
   const items = [
     { icon: Award, value: "15+", label: "Years of service" },
     { icon: FlaskConical, value: "500+", label: "Tests & scans" },
-    { icon: Users, value: "1L+", label: "Patients served" },
+    { icon: Users, value: "10L+", label: "Patients served" },
     { icon: Activity, value: "24×7", label: "Emergency support" },
   ];
   return (
