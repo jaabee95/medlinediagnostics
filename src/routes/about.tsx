@@ -44,7 +44,7 @@ function AboutPage() {
             <ul className="space-y-4 text-sm">
               <Item icon={Award} label="Years of trusted service" value="15+" />
               <Item icon={FlaskConical} label="Tests & scans offered" value="500+" />
-              <Item icon={Users} label="Patients served" value="1,00,000+" />
+              <Item icon={Users} label="Patients served" value="10,00,000+" />
               <Item icon={Microscope} label="Specialised departments" value="6" />
             </ul>
           </aside>
