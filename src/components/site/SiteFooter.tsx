@@ -21,7 +21,7 @@ export function SiteFooter() {
           <p className="mt-4 text-sm text-muted-foreground">{dp?.about_text}</p>
           {dp?.nabl_status && (
             <div className="mt-3 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              NABL: {dp.nabl_status}
+              NABL {dp.nabl_status}
             </div>
           )}
         </div>
