@@ -1,32 +1,37 @@
-# Why your GitHub changes aren't showing in preview
+## Understanding
 
-The Lovable preview runs from the code in **Lovable's workspace sandbox**, not directly from GitHub. Sync is supposed to be two-way, but it can fall out of sync when:
+The site is already mostly DB-driven:
+- `main_groups` table already powers Services tabs dynamically — admin already manages add/edit/delete/enable/order via `admin.services.tsx`. **No new Category Master module is needed.** I'll verify admin coverage and add anything missing (icon field, "Packages" as a toggleable system category).
+- `diagnostic_profile` holds the single address textbox + phone/whatsapp.
+- `reviews` and `doctors` tables already exist with admin CRUD.
 
-1. The GitHub integration was disconnected, or the repo was changed/renamed.
-2. You pushed to a branch other than the one Lovable tracks (Lovable syncs the **default branch only** — usually `main`).
-3. A push happened during a Lovable edit, causing a merge conflict that paused sync.
-4. The dev sandbox cached an older state and needs a restart.
+So the real work is presentation: active tab tracking, sticky offsets, global contact area, carousels, address restructuring, homepage dynamic rendering.
 
-## Plan to fix
+## Files to modify
 
-1. **Verify the GitHub connection**
-   - Open the **+** menu (bottom left of chat) → **GitHub** → confirm the repo `jaabee95/medlinediagnostics` is connected.
-   - Confirm Lovable is tracking the branch you actually pushed to (default = `main`). If you pushed to another branch, merge it into `main`.
+1. **`src/routes/services.tsx`** — active tab state via scroll spy + click, `scroll-mt` increased, remove per-card Call/WhatsApp, add global contact area (desktop inline + mobile sticky bottom).
+2. **`src/routes/index.tsx`** — render homepage category sections dynamically from `main_groups` order; auto-hide disabled.
+3. **`src/components/site/SiteFooter.tsx`** + contact/index pages — use new `formatAddress()` helper.
+4. **New `src/lib/address.ts`** — formatter that prefers structured fields, falls back to legacy `address`.
+5. **New `src/components/site/ReviewsCarousel.tsx`** + **`DoctorsCarousel.tsx`** — auto-scroll RTL, pause on hover, swipe, arrows. Activate only when items exceed threshold.
+6. **`src/routes/admin.profile.tsx`** — add structured address fields (line1, line2, area, city, district, state, pincode, maps_url).
+7. **Supabase migration** — add columns: `diagnostic_profile.address_line1/line2/area/city/district/state/pincode/maps_url`; `main_groups.icon` (text, nullable). Keep existing `address` for backward compat.
+8. **`src/routes/admin.services.tsx`** — add Icon field input (if not present).
 
-2. **Check for sync errors**
-   - In the same GitHub panel, look for any "sync failed / conflict" banner. If present, resolve the conflict on GitHub (accept your version), then re-trigger sync.
+## What I will NOT touch
+`wrangler.jsonc`, `vite.config.ts`, `src/start.ts`, `src/router.tsx`, `routeTree.gen.ts`, Supabase auth, `.env`, deploy config.
 
-3. **Force the sandbox to pull the latest commit**
-   - I will restart the Lovable dev server so it re-reads files from the synced workspace. If files are already synced, your changes will appear immediately in preview.
+## Risks
+- Carousel implementation should be lightweight — no new heavy deps (use CSS + small JS, or `embla-carousel-react` if already installed). I'll check first and prefer existing.
+- Migration must include GRANTs (already present for these tables; new columns inherit).
+- Active-tab scroll spy must not fight with click-to-scroll — debounce via IntersectionObserver.
 
-4. **If files still don't appear in the Lovable Code view**
-   - Sync is broken at the integration level. Quickest recovery: disconnect GitHub from the project, then reconnect and choose **Pull from GitHub** so Lovable overwrites its sandbox with your repo's current state.
+## Approach (minimal-diff)
+- Step 1: Migration to add structured address columns + main_groups.icon.
+- Step 2: Update services page (active tab, scroll-mt-32, remove card buttons, global contact bar).
+- Step 3: Build carousels + swap into homepage. Make homepage categories dynamic.
+- Step 4: Update admin profile form for structured address. Update footer/contact display.
+- Step 5: Verify build.
 
-5. **Hosting note**
-   - Your Cloudflare deployment is independent of Lovable preview. Even after preview is fixed, Cloudflare only updates when its own build runs against your repo. They are two separate environments.
-
-## What I need from you to proceed
-
-Reply with either:
-- **"Restart and check"** — I'll restart the dev server and report what the sandbox actually contains vs. your GitHub repo.
-- **"Reconnect GitHub"** — if you've already confirmed sync is broken, I'll guide you through the disconnect/reconnect + pull step (you have to click those in the UI; I can't do it for you).
+## Confirmation needed
+This is a large multi-step change. Should I proceed with all of it in one pass, or would you prefer I tackle it in phases (e.g., Phase 1 = Services page fixes only, Phase 2 = address + carousels, Phase 3 = dynamic homepage)? Phased delivery is safer for reviewing each change against the live deployment.

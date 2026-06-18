@@ -2,10 +2,11 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Phone, Mail, MessageCircle } from "lucide-react";
 import logo from "@/assets/medline-logo.png";
-import { fetchDiagnosticProfile, mapsLink, telLink, waLink } from "@/lib/site";
+import { fetchDiagnosticProfile, formatAddressLines, mapsLink, telLink, waLink } from "@/lib/site";
 
 export function SiteFooter() {
   const { data: dp } = useQuery({ queryKey: ["dp"], queryFn: fetchDiagnosticProfile });
+  const addressLines = formatAddressLines(dp);
 
   return (
     <footer className="mt-16 border-t border-border/60 bg-secondary/40">
@@ -39,8 +40,13 @@ export function SiteFooter() {
         <div>
           <h4 className="mb-3 text-sm font-semibold">Reach Us</h4>
           <ul className="space-y-3 text-sm text-muted-foreground">
-            {dp?.address && (
-              <li className="flex gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {dp.address}</li>
+            {addressLines.length > 0 && (
+              <li className="flex gap-2">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span className="not-italic">
+                  {addressLines.map((l, i) => <span key={i} className="block">{l}</span>)}
+                </span>
+              </li>
             )}
             {dp?.phone && (
               <li><a href={telLink(dp.phone)} className="flex gap-2 hover:text-primary"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {dp.phone}</a></li>

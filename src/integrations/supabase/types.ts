@@ -18,7 +18,12 @@ export type Database = {
         Row: {
           about_text: string | null
           address: string | null
+          address_line1: string | null
+          address_line2: string | null
+          area: string | null
+          city: string | null
           created_at: string
+          district: string | null
           email: string | null
           entity_type: string | null
           id: string
@@ -31,7 +36,9 @@ export type Database = {
           nabl_valid_until: string | null
           name: string
           phone: string | null
+          pincode: string | null
           registration_no: string | null
+          state: string | null
           tagline: string | null
           updated_at: string
           whatsapp: string | null
@@ -39,7 +46,12 @@ export type Database = {
         Insert: {
           about_text?: string | null
           address?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          area?: string | null
+          city?: string | null
           created_at?: string
+          district?: string | null
           email?: string | null
           entity_type?: string | null
           id?: string
@@ -52,7 +64,9 @@ export type Database = {
           nabl_valid_until?: string | null
           name: string
           phone?: string | null
+          pincode?: string | null
           registration_no?: string | null
+          state?: string | null
           tagline?: string | null
           updated_at?: string
           whatsapp?: string | null
@@ -60,7 +74,12 @@ export type Database = {
         Update: {
           about_text?: string | null
           address?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          area?: string | null
+          city?: string | null
           created_at?: string
+          district?: string | null
           email?: string | null
           entity_type?: string | null
           id?: string
@@ -73,7 +92,9 @@ export type Database = {
           nabl_valid_until?: string | null
           name?: string
           phone?: string | null
+          pincode?: string | null
           registration_no?: string | null
+          state?: string | null
           tagline?: string | null
           updated_at?: string
           whatsapp?: string | null
