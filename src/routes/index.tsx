@@ -8,8 +8,9 @@ import {
 } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
+import { AutoCarousel } from "@/components/site/AutoCarousel";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchDiagnosticProfile, telLink, waLink } from "@/lib/site";
+import { fetchDiagnosticProfile, telLink, waLink, GENERAL_WA_MESSAGE } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -127,7 +128,7 @@ function HomePage() {
                 <div className="relative mt-5 flex items-center justify-between">
                   {p.price != null && <span className="text-2xl font-bold text-primary">₹{Number(p.price).toLocaleString("en-IN")}</span>}
                   <Button asChild size="sm">
-                    <a href={waLink(dp?.whatsapp, `I'm interested in the ${p.name} package.`)} target="_blank" rel="noreferrer">Enquire</a>
+                    <a href={waLink(dp?.whatsapp, GENERAL_WA_MESSAGE)} target="_blank" rel="noreferrer">Enquire</a>
                   </Button>
                 </div>
               </article>
@@ -145,9 +146,12 @@ function HomePage() {
               <p className="text-sm font-semibold uppercase tracking-wider text-primary">Our Specialists</p>
               <h2 className="mt-1 text-3xl font-bold md:text-4xl">Experienced consultants you can trust</h2>
             </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {doctors.map((d) => (
-                <article key={d.id} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+            <AutoCarousel
+              items={doctors}
+              ariaLabel="Doctors"
+              autoScrollThreshold={3}
+              renderItem={(d: any) => (
+                <article className="h-full rounded-2xl border border-border bg-card p-6 shadow-card">
                   <div className="flex items-start gap-4">
                     {d.photo_url && (
                       <img src={d.photo_url} alt={d.name} className="h-20 w-20 rounded-full object-cover" loading="lazy" width={80} height={80} />
@@ -161,8 +165,8 @@ function HomePage() {
                   {d.description && <p className="mt-4 text-sm text-muted-foreground">{d.description}</p>}
                   {d.reg_no && <p className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">Reg No: {d.reg_no}</p>}
                 </article>
-              ))}
-            </div>
+              )}
+            />
           </div>
         </section>
       )}
@@ -360,9 +364,12 @@ function Testimonials() {
           </div>
           <Button asChild variant="outline"><Link to="/reviews">Write a review</Link></Button>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {items.map((t: any) => (
-            <figure key={t.id} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+        <AutoCarousel
+          items={items}
+          ariaLabel="Patient reviews"
+          autoScrollThreshold={3}
+          renderItem={(t: any) => (
+            <figure className="h-full rounded-2xl border border-border bg-card p-6 shadow-card">
               <div className="flex">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className={`h-4 w-4 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
@@ -383,8 +390,8 @@ function Testimonials() {
                 </div>
               </figcaption>
             </figure>
-          ))}
-        </div>
+          )}
+        />
       </div>
     </section>
   );
