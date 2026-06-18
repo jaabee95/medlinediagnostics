@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchDiagnosticProfile, telLink, waLink, mapsLink } from "@/lib/site";
+import { fetchDiagnosticProfile, formatAddress, telLink, waLink, mapsLink } from "@/lib/site";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -64,17 +64,17 @@ function ContactPage() {
 
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 md:grid-cols-2">
         <div className="space-y-4">
-          <Tile icon={MapPin} title="Visit" text={dp?.address} action={dp ? { href: mapsLink(dp), label: "Get directions" } : undefined} />
+          <Tile icon={MapPin} title="Visit" text={formatAddress(dp)} action={dp ? { href: mapsLink(dp), label: "Get directions" } : undefined} />
           <Tile icon={Phone} title="Call" text={dp?.phone} action={dp?.phone ? { href: telLink(dp.phone), label: "Tap to call" } : undefined} />
           <Tile icon={MessageCircle} title="WhatsApp" text={dp?.whatsapp} action={dp?.whatsapp ? { href: waLink(dp.whatsapp), label: "Open WhatsApp" } : undefined} />
           <Tile icon={Mail} title="Email" text={dp?.email} action={dp?.email ? { href: `mailto:${dp.email}`, label: "Send email" } : undefined} />
 
-          {dp?.address && (
+          {formatAddress(dp) && (
             <iframe
               title="Map"
               className="h-64 w-full rounded-2xl border border-border"
               loading="lazy"
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(dp.address)}&output=embed`}
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(formatAddress(dp))}&output=embed`}
             />
           )}
         </div>
