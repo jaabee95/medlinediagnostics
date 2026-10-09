@@ -8,7 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 import { BillingSummary } from "@/components/admin/BillingSummary";
 
 export const Route = createFileRoute("/admin/")({
-  head: () => ({ meta: [{ title: "Admin Dashboard — Medline" }] }),
+  head: () => ({ meta: [{ title: "Admin Dashboard — Medline" }, { name: "description", content: "Admin Dashboard — Medline. Private staff workspace." }, { property: "og:title", content: "Admin Dashboard — Medline" }, { property: "og:description", content: "Admin Dashboard — Medline. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Dashboard"><Dashboard /></AdminShell>,
 });
 

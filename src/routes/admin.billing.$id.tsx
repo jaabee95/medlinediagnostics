@@ -17,9 +17,10 @@ import {
   type Invoice, type Patient, type Payment, type Referrer,
 } from "@/lib/billing";
 import { toast } from "sonner";
+import { billingTotals, mayChangeInvoice } from "@/lib/billing-rules";
 
 export const Route = createFileRoute("/admin/billing/$id")({
-  head: () => ({ meta: [{ title: "Invoice — Admin" }] }),
+  head: () => ({ meta: [{ title: "Invoice — Admin — Medline Diagnostics" }, { name: "description", content: "Invoice — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Invoice — Admin — Medline Diagnostics" }, { property: "og:description", content: "Invoice — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: InvoicePage,
 });
 
@@ -40,8 +41,8 @@ function InvoiceDetail({ id }: { id: string }) {
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null)); }, []);
   const access = useAccess(uid);
   const canEdit = access.can("billing", "edit");
-  const canModify = canEdit && access.can("billing_modify", "edit");
-  const canCancel = canEdit && access.can("billing_cancel", "edit");
+  const canModify = mayChangeInvoice(access.isAdmin, canEdit, access.can("billing_modify", "edit"));
+  const canCancel = mayChangeInvoice(access.isAdmin, canEdit, access.can("billing_cancel", "edit"));
 
   const [editing, setEditing] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
@@ -122,6 +123,9 @@ function InvoiceDetail({ id }: { id: string }) {
                 const { error } = await supabase.rpc("cancel_billing_invoice", { _invoice_id: id, _reason: reason });
                 if (error) return toast.error(error.message);
                 toast.success("Invoice cancelled");
+                qc.invalidateQueries({ queryKey: ["billing-invoices"] });
+                qc.invalidateQueries({ queryKey: ["billing-summary"] });
+                qc.invalidateQueries({ queryKey: ["referrers-crm"] });
                 qc.invalidateQueries({ queryKey: ["invoice", id] });
               }}
             >
@@ -167,7 +171,7 @@ function InvoiceDetail({ id }: { id: string }) {
         invoiceId={id}
         balance={balance}
         uid={uid}
-        onSaved={() => { setPayOpen(false); qc.invalidateQueries({ queryKey: ["invoice", id] }); }}
+        onSaved={() => { setPayOpen(false); qc.invalidateQueries({ queryKey: ["invoice", id] }); qc.invalidateQueries({ queryKey: ["billing-invoices"] }); qc.invalidateQueries({ queryKey: ["billing-summary"] }); qc.invalidateQueries({ queryKey: ["referrers-crm"] }); }}
       />
     </div>
   );
@@ -182,14 +186,14 @@ function PrintableInvoice({ invoice, items, payments, dp, paid, balance }: any) 
         <div className="flex items-center gap-3">
           {dp?.logo_url && <img src={dp.logo_url} alt="" className="h-14 w-14 object-contain" />}
           <div>
-            <div className="text-xl font-bold">{dp?.name || "Medline Diagnostics"}</div>
+            <div className="text-base font-bold sm:text-xl">{dp?.name || "Medline Diagnostics"}</div>
             {dp?.tagline && <div className="text-xs text-muted-foreground">{dp.tagline}</div>}
             {addrLines.map((l: string, i: number) => <div key={i} className="text-xs text-muted-foreground">{l}</div>)}
             {dp?.phone && <div className="mt-0.5 text-xs">Phone: {dp.phone}{dp.whatsapp ? ` · WhatsApp: ${dp.whatsapp}` : ""}</div>}
             {dp?.email && <div className="text-xs">Email: {dp.email}</div>}
           </div>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
           <div className="text-lg font-bold uppercase tracking-wide">Invoice</div>
           <div className="text-sm font-semibold">{invoice.invoice_no}</div>
           <div className="text-xs text-muted-foreground">{new Date(invoice.created_at).toLocaleDateString()}</div>
@@ -213,7 +217,7 @@ function PrintableInvoice({ invoice, items, payments, dp, paid, balance }: any) 
       </div>
 
       {/* Items */}
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-xs sm:text-sm">
         <thead>
           <tr className="border-y bg-muted/40 text-left text-xs uppercase tracking-wide">
             <th className="py-2 pr-2">#</th>
@@ -228,7 +232,7 @@ function PrintableInvoice({ invoice, items, payments, dp, paid, balance }: any) 
           {items.map((it: any, i: number) => (
             <tr key={i} className="border-b">
               <td className="py-2 pr-2 text-xs">{i + 1}</td>
-              <td className="py-2 pr-2">{it.name}</td>
+              <td className="py-2 pr-2 break-words">{it.name}</td>
               <td className="py-2 pr-2 text-xs text-muted-foreground">{ITEM_TYPE_LABEL[it.item_type] || it.item_type}</td>
               <td className="py-2 pr-2 text-right">{it.quantity}</td>
               <td className="py-2 pr-2 text-right">{inr(it.price)}</td>
@@ -323,6 +327,7 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
   const [newPatient, setNewPatient] = useState({ name: "", phone: "", age: "", gender: "" });
   const [patientTerm, setPatientTerm] = useState("");
   const [referrerId, setReferrerId] = useState("");
+  const [refTerm, setRefTerm] = useState("");
   const [quickRefOpen, setQuickRefOpen] = useState(false);
   const [items, setItems] = useState<DraftItem[]>([]);
   const [itemTerm, setItemTerm] = useState("");
@@ -397,7 +402,7 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
     return out.slice(0, 12);
   }, [itemTerm, catalog]);
 
-  const subtotal = items.reduce((s, it) => s + Number(it.price) * it.quantity, 0);
+  const subtotal = items.reduce((s, it) => s + Math.round(Number(it.price) * it.quantity * 100) / 100, 0);
   const total = Math.max(0, subtotal - Number(discount || 0));
 
   function addItem(r: { item_type: DraftItem["item_type"]; item_id: string; name: string; price: number }) {
@@ -413,7 +418,7 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
     setBusy(true);
     try {
       if (!patientId && !newPatient.name.trim()) throw new Error("Select a patient or enter patient details");
-      if (!items.length) throw new Error("Add at least one test, profile or package");
+      billingTotals(items, Number(discount || 0));
       const { data: invoiceId, error } = await supabase.rpc("save_billing_invoice", {
         payload: {
           id: isEdit ? id : null, patient_id: patientId,
@@ -510,11 +515,12 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
       <Card>
         <CardHeader><CardTitle className="text-base">Referral source</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3">
+          <Input aria-label="Search referrers" className="w-full sm:w-56" placeholder="Search referrers" value={refTerm} onChange={(e) => setRefTerm(e.target.value)} />
           <Select value={referrerId || "walkin"} onValueChange={(v) => setReferrerId(v === "walkin" ? "" : v)}>
             <SelectTrigger className="w-full sm:w-72"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="walkin">Walk-in</SelectItem>
-              {(referrers as Referrer[]).filter((r) => r.is_active).map((r) => (
+              {(referrers as Referrer[]).filter((r) => (r.is_active || r.id === referrerId) && (r.id === referrerId || r.name.toLowerCase().includes(refTerm.toLowerCase()))).map((r) => (
                 <SelectItem key={r.id} value={r.id}>{r.name} ({r.type})</SelectItem>
               ))}
             </SelectContent>
@@ -559,12 +565,12 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
                     <div className="text-xs text-muted-foreground">{ITEM_TYPE_LABEL[it.item_type]} · {inr(it.price)} each</div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => setItems(items.map((x, xi) => xi === i ? { ...x, quantity: Math.max(1, x.quantity - 1) } : x))}>−</Button>
+                    <Button aria-label="Change quantity" size="icon" variant="ghost" onClick={() => setItems(items.map((x, xi) => xi === i ? { ...x, quantity: Math.max(1, x.quantity - 1) } : x))}>−</Button>
                     <span className="w-6 text-center text-sm">{it.quantity}</span>
-                    <Button size="icon" variant="ghost" onClick={() => setItems(items.map((x, xi) => xi === i ? { ...x, quantity: x.quantity + 1 } : x))}>+</Button>
+                    <Button aria-label="Change quantity" size="icon" variant="ghost" onClick={() => setItems(items.map((x, xi) => xi === i ? { ...x, quantity: x.quantity + 1 } : x))}>+</Button>
                   </div>
                   <div className="w-20 text-right text-sm font-semibold">{inr(Number(it.price) * it.quantity)}</div>
-                  <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, xi) => xi !== i))}><Trash2 className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" aria-label="Remove item" onClick={() => setItems(items.filter((_, xi) => xi !== i))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               ))}
             </div>

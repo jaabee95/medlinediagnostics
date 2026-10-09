@@ -19,7 +19,7 @@ import { inr, type Referrer } from "@/lib/billing";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/referrers")({
-  head: () => ({ meta: [{ title: "Referrers — Admin" }] }),
+  head: () => ({ meta: [{ title: "Referrers — Admin — Medline Diagnostics" }, { name: "description", content: "Referrers — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Referrers — Admin — Medline Diagnostics" }, { property: "og:description", content: "Referrers — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Referrers (CRM)"><Referrers /></AdminShell>,
 });
 
@@ -37,9 +37,12 @@ function Referrers() {
     queryFn: async () => {
       const [refs, inv, pay] = await Promise.all([
         supabase.from("referrers").select("*").order("name"),
-        supabase.from("invoices").select("id,referrer_id,status,total"),
+        supabase.from("invoices").select("id,invoice_no,referrer_id,status,total"),
         supabase.from("payments").select("invoice_id,amount"),
       ]);
+      if (refs.error) throw refs.error;
+      if (inv.error) throw inv.error;
+      if (pay.error) throw pay.error;
       return { refs: (refs.data || []) as Referrer[], invoices: inv.data || [], payments: pay.data || [] };
     },
   });
@@ -82,6 +85,12 @@ function Referrers() {
                   Credit: {inr(outstanding(r.id))}
                 </div>
               </div>
+              <details className="mt-2 text-sm">
+                <summary className="cursor-pointer text-primary">View invoices / collect payment</summary>
+                <div className="mt-2 space-y-2">
+                  {(data?.invoices || []).filter((i) => i.referrer_id === r.id).map((i) => <Link className="block text-primary hover:underline" key={i.id} to="/admin/billing/$id" params={{ id: i.id }}>{i.invoice_no} · {inr(i.total)} · {i.status}</Link>)}
+                </div>
+              </details>
               {r.notes && <p className="mt-2 text-xs text-muted-foreground">{r.notes}</p>}
             </CardContent>
           </Card>

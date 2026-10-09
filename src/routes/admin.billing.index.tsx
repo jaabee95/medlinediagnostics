@@ -11,7 +11,7 @@ import { useAccess } from "@/lib/permissions";
 import { inr, payStatus, PAY_STATUS_LABEL, type Invoice } from "@/lib/billing";
 
 export const Route = createFileRoute("/admin/billing/")({
-  head: () => ({ meta: [{ title: "Billing — Admin" }] }),
+  head: () => ({ meta: [{ title: "Invoices — Medline Diagnostics Admin" }, { name: "description", content: "Invoices — Medline Diagnostics Admin. Private staff workspace." }, { property: "og:title", content: "Invoices — Medline Diagnostics Admin" }, { property: "og:description", content: "Invoices — Medline Diagnostics Admin. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: InvoiceList,
 });
 

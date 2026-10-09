@@ -13,7 +13,7 @@ import { uploadPublicMedia } from "@/lib/admin-helpers";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/profile")({
-  head: () => ({ meta: [{ title: "Diagnostic Profile — Admin" }] }),
+  head: () => ({ meta: [{ title: "Diagnostic Profile — Admin — Medline Diagnostics" }, { name: "description", content: "Diagnostic Profile — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Diagnostic Profile — Admin — Medline Diagnostics" }, { property: "og:description", content: "Diagnostic Profile — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Diagnostic Profile"><ProfileForm /></AdminShell>,
 });
 

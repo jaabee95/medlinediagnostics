@@ -12,12 +12,7 @@ import { uploadPublicMedia } from "@/lib/admin-helpers";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/reviews")({
-  head: () => ({
-    meta: [
-      { title: "Share your experience — Medline Diagnostics" },
-      { name: "description", content: "Tell us about your experience at Medline Diagnostics, Trichy. Your feedback helps us serve you better." },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Share your experience — Medline Diagnostics" }, { name: "description", content: "Tell us about your experience at Medline Diagnostics, Trichy. Your feedback helps us serve you better." }, { property: "og:title", content: "Share your experience — Medline Diagnostics" }, { property: "og:description", content: "Tell us about your experience at Medline Diagnostics, Trichy. Your feedback helps us serve you better." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: ReviewsPage,
 });
 

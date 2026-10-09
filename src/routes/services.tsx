@@ -10,12 +10,7 @@ import { fetchDiagnosticProfile, telLink, waLink, GENERAL_WA_MESSAGE } from "@/l
 import { ContactInline, ContactStickyMobile } from "@/components/site/ContactBar";
 
 export const Route = createFileRoute("/services")({
-  head: () => ({
-    meta: [
-      { title: "Services & Tests — Medline Diagnostics, Trichy" },
-      { name: "description", content: "Browse pathology, imaging, cardiac and pulmonary tests with TAT, sample requirements and prices at Medline Diagnostics, Trichy." },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Services & Tests — Medline Diagnostics, Trichy" }, { name: "description", content: "Browse pathology, imaging, cardiac and pulmonary tests with TAT, sample requirements and prices at Medline Diagnostics, Trichy." }, { property: "og:title", content: "Services & Tests — Medline Diagnostics, Trichy" }, { property: "og:description", content: "Browse pathology, imaging, cardiac and pulmonary tests with TAT, sample requirements and prices at Medline Diagnostics, Trichy." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: ServicesPage,
 });
 

@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/account")({
-  head: () => ({ meta: [{ title: "My Account — Admin" }] }),
+  head: () => ({ meta: [{ title: "My Account — Admin — Medline Diagnostics" }, { name: "description", content: "My Account — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "My Account — Admin — Medline Diagnostics" }, { property: "og:description", content: "My Account — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="My Account"><Account /></AdminShell>,
 });
 

@@ -13,16 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchDiagnosticProfile, telLink, waLink, GENERAL_WA_MESSAGE } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Medline Diagnostics — Trusted Pathology & Imaging in Trichy" },
-      {
-        name: "description",
-        content:
-          "Walk-in diagnostic centre in Ponnagar, Trichy offering blood tests, ultrasound, X-Ray, CT, ECHO, TMT, PFT and health checkup packages.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Medline Diagnostics — Trusted Pathology & Imaging in Trichy" }, { name: "description", content: "Walk-in diagnostic centre in Ponnagar, Trichy offering blood tests, ultrasound, X-Ray, CT, ECHO, TMT, PFT and health checkup packages." }, { property: "og:title", content: "Medline Diagnostics — Trusted Pathology & Imaging in Trichy" }, { property: "og:description", content: "Walk-in diagnostic centre in Ponnagar, Trichy offering blood tests, ultrasound, X-Ray, CT, ECHO, TMT, PFT and health checkup packages." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: HomePage,
 });
 

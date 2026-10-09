@@ -16,7 +16,7 @@ import { Plus, KeyRound, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/users")({
-  head: () => ({ meta: [{ title: "Users — Admin" }] }),
+  head: () => ({ meta: [{ title: "Users — Admin — Medline Diagnostics" }, { name: "description", content: "Users — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Users — Admin — Medline Diagnostics" }, { property: "og:description", content: "Users — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Users"><Users /></AdminShell>,
 });
 

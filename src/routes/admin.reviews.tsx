@@ -10,7 +10,7 @@ import { Star, Trash2, CheckCircle2, XCircle, Pin, PinOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/reviews")({
-  head: () => ({ meta: [{ title: "Reviews — Admin" }] }),
+  head: () => ({ meta: [{ title: "Reviews — Admin — Medline Diagnostics" }, { name: "description", content: "Reviews — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Reviews — Admin — Medline Diagnostics" }, { property: "og:description", content: "Reviews — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Reviews"><Reviews /></AdminShell>,
 });
 

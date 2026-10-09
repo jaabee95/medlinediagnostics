@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { buildTemplateWorkbook, downloadWorkbook, parseImportFile, validateRows, type ValidatedRow } from "@/lib/tests-excel";
 
 export const Route = createFileRoute("/admin/services")({
-  head: () => ({ meta: [{ title: "Services — Admin" }] }),
+  head: () => ({ meta: [{ title: "Services — Admin — Medline Diagnostics" }, { name: "description", content: "Services — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Services — Admin — Medline Diagnostics" }, { property: "og:description", content: "Services — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Services & Tests"><Services /></AdminShell>,
 });
 

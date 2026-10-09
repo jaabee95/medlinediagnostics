@@ -8,12 +8,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { fetchDiagnosticProfile, mapsLink } from "@/lib/site";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
-    meta: [
-      { title: "About — Medline Diagnostics, Trichy" },
-      { name: "description", content: "Medline Diagnostics (P) Ltd in Ponnagar, Trichy — our mission, vision, NABL-aspirant quality systems and commitment to accurate, affordable diagnostics." },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "About — Medline Diagnostics, Trichy" }, { name: "description", content: "Medline Diagnostics (P) Ltd in Ponnagar, Trichy — our mission, vision, NABL-aspirant quality systems and commitment to accurate, affordable diagnostics." }, { property: "og:title", content: "About — Medline Diagnostics, Trichy" }, { property: "og:description", content: "Medline Diagnostics (P) Ltd in Ponnagar, Trichy — our mission, vision, NABL-aspirant quality systems and commitment to accurate, affordable diagnostics." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AboutPage,
 });
 
