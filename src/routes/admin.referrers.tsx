@@ -14,6 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccess } from "@/lib/permissions";
 import { inr, type Referrer } from "@/lib/billing";
 import { toast } from "sonner";
 
@@ -26,6 +27,9 @@ const REFERRER_TYPES = ["doctor", "clinic", "hospital", "organization", "other"]
 
 function Referrers() {
   const qc = useQueryClient();
+  const [uid, setUid] = useState<string | null>(null);
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null)); }, []);
+  const access = useAccess(uid);
   const [editing, setEditing] = useState<Referrer | null | "new">(null);
 
   const { data } = useQuery({
@@ -54,7 +58,7 @@ function Referrers() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={() => setEditing("new")}><Plus className="mr-1 h-4 w-4" /> Add Referrer</Button>
+        {access.can("referrers", "edit") && <Button onClick={() => setEditing("new")}><Plus className="mr-1 h-4 w-4" /> Add Referrer</Button>}
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {refs.map((r) => (
@@ -70,11 +74,11 @@ function Referrers() {
                   <div className="mt-1 text-sm">{r.phone || "—"}</div>
                   {r.email && <div className="text-xs text-muted-foreground">{r.email}</div>}
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => setEditing(r)}><Pencil className="h-4 w-4" /></Button>
+                {access.can("referrers", "edit") && <Button aria-label="Edit referrer" size="icon" variant="ghost" onClick={() => setEditing(r)}><Pencil className="h-4 w-4" /></Button>}
               </div>
               <div className="mt-3 flex items-center justify-between border-t pt-3">
                 <div className="text-xs text-muted-foreground">{invoiceCount(r.id)} invoices</div>
-                <div className={`text-sm font-bold ${outstanding(r.id) > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+                <div className={`text-sm font-bold ${outstanding(r.id) > 0 ? "text-primary" : "text-success"}`}>
                   Credit: {inr(outstanding(r.id))}
                 </div>
               </div>
@@ -125,7 +129,7 @@ function ReferrerDialog({ open, referrer, onClose, onSaved }: {
       is_active: !!form.is_active,
     };
     const { error } = isEdit
-      ? await supabase.from("referrers").update(payload).eq("id", referrer!.id)
+      ? await supabase.from("referrers").update(payload).eq("id", referrer?.id ?? "")
       : await supabase.from("referrers").insert(payload);
     setBusy(false);
     if (error) return toast.error(error.message);
