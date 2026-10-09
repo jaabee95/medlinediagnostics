@@ -1,20 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
+import { deepStrictEqual, strictEqual, throws } from "node:assert";
 import { billingTotals, mayChangeInvoice } from "./billing-rules";
 
 describe("staff billing rules", () => {
   it("adds catalogue prices and discount without GST", () => {
-    expect(billingTotals([{ price: 500, quantity: 2 }, { price: 200, quantity: 1 }], 100)).toEqual({ subtotal: 1200, discount: 100, total: 1100 });
+    deepStrictEqual(billingTotals([{ price: 500, quantity: 2 }, { price: 200, quantity: 1 }], 100), { subtotal: 1200, discount: 100, total: 1100 });
   });
   it("does not allow modification without separate privilege", () => {
-    expect(mayChangeInvoice(false, true, false)).toBe(false);
-    expect(mayChangeInvoice(false, true, true)).toBe(true);
+    strictEqual(mayChangeInvoice(false, true, false), false);
+    strictEqual(mayChangeInvoice(false, true, true), true);
   });
   it("allows admin cancellation and rejects unprivileged staff", () => {
-    expect(mayChangeInvoice(true, false, false)).toBe(true);
-    expect(mayChangeInvoice(false, false, true)).toBe(false);
+    strictEqual(mayChangeInvoice(true, false, false), true);
+    strictEqual(mayChangeInvoice(false, false, true), false);
   });
   it("rejects negative and excessive discounts", () => {
-    expect(() => billingTotals([{ price: 500, quantity: 1 }], -1)).toThrow();
-    expect(() => billingTotals([{ price: 500, quantity: 1 }], 501)).toThrow();
+    throws(() => billingTotals([{ price: 500, quantity: 1 }], -1));
+    throws(() => billingTotals([{ price: 500, quantity: 1 }], 501));
   });
 });
