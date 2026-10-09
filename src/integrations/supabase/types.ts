@@ -185,6 +185,107 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_items: {
+        Row: {
+          id: string
+          invoice_id: string
+          item_id: string | null
+          item_type: string
+          line_total: number
+          name: string
+          price: number
+          quantity: number
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          item_id?: string | null
+          item_type: string
+          line_total?: number
+          name: string
+          price?: number
+          quantity?: number
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          item_id?: string | null
+          item_type?: string
+          line_total?: number
+          name?: string
+          price?: number
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          discount: number
+          id: string
+          invoice_no: string
+          notes: string | null
+          patient_id: string
+          referrer_id: string | null
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          discount?: number
+          id?: string
+          invoice_no: string
+          notes?: string | null
+          patient_id: string
+          referrer_id?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          discount?: number
+          id?: string
+          invoice_no?: string
+          notes?: string | null
+          patient_id?: string
+          referrer_id?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "referrers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       main_groups: {
         Row: {
           created_at: string
@@ -283,6 +384,94 @@ export type Database = {
         }
         Relationships: []
       }
+      patients: {
+        Row: {
+          address: string | null
+          age: number | null
+          created_at: string
+          default_referrer_id: string | null
+          gender: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          created_at?: string
+          default_referrer_id?: string | null
+          gender?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          created_at?: string
+          default_referrer_id?: string | null
+          gender?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_default_referrer_id_fkey"
+            columns: ["default_referrer_id"]
+            isOneToOne: false
+            referencedRelation: "referrers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          method: string
+          notes: string | null
+          paid_at: string
+          received_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          method?: string
+          notes?: string | null
+          paid_at?: string
+          received_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          method?: string
+          notes?: string | null
+          paid_at?: string
+          received_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -310,6 +499,45 @@ export type Database = {
           must_change_password?: boolean
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      referrers: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -604,6 +832,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_billing: { Args: { _need_edit?: boolean }; Returns: boolean }
+      can_access_referrers: { Args: { _need_edit?: boolean }; Returns: boolean }
       has_page_permission: {
         Args: { _need_edit?: boolean; _page: string; _user_id: string }
         Returns: boolean
@@ -616,6 +846,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      next_invoice_no: { Args: never; Returns: string }
     }
     Enums: {
       app_role: "admin" | "editor" | "staff"
