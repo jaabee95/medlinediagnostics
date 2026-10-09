@@ -19,15 +19,14 @@ RLS: billing pages are gated by the existing permission system. Policies use
 
 ## Admin pages (3 new routes + nav)
 
-1. **`/admin/billing`** — invoice list: search by invoice no / patient name / phone, filter by status and date range, columns for patient, referrer, total, paid, balance, status. "New Invoice" button.
-2. **`/admin/billing/new` (+ edit)** — invoice editor:
-   - Patient: search existing by phone/name, or quick-create inline.
-   - Referral: "Walk-in" by default, or pick a referrer (searchable), or quick-create one — every invoice maps a referral source.
-   - Items: searchable picker pulling live from `tests`, `test_profiles`, and `packages`; add rows, edit qty, line totals auto.
-   - Discount, running subtotal/total, save → status "issued".
-3. **`/admin/billing/:id`** — invoice detail: items, totals, payment history, "Record Payment" (amount, method, notes), payment list, Cancel invoice, and **Print** with paper-size choice (A4 / A5) in a clean letterhead layout (clinic name, logo, address, phone from Diagnostic Profile) via a print stylesheet.
-
-4. **Referrers CRM — `/admin/referrers`** — list of referrers with outstanding credit (sum of unpaid invoice balances per referrer), add/edit/ deactivate. This is how "credit now, collect later" stays visible.
+1. `**/admin/billing**` — invoice list: search by invoice no / patient name / phone, filter by status and date range, columns for patient, referrer, total, paid, balance, status. "New Invoice" button.
+2. `**/admin/billing/new` (+ edit)** — invoice editor:
+  - Patient: search existing by phone/name, or quick-create inline.
+  - Referral: "Walk-in" by default, or pick a referrer (searchable), or quick-create one — every invoice maps a referral source.
+  - Items: searchable picker pulling live from `tests`, `test_profiles`, and `packages`; add rows, edit qty, line totals auto.
+  - Discount, running subtotal/total, save → status "issued".
+3. `**/admin/billing/:id**` — invoice detail: items, totals, payment history, "Record Payment" (amount, method, notes), payment list, Cancel invoice, and **Print** with paper-size choice (A4 / A5) in a clean letterhead layout (clinic name, logo, address, phone from Diagnostic Profile) via a print stylesheet.
+4. **Referrers CRM — `/admin/referrers**` — list of referrers with outstanding credit (sum of unpaid invoice balances per referrer), add/edit/ deactivate. This is how "credit now, collect later" stays visible.
 
 ## Permissions & nav
 
@@ -47,6 +46,10 @@ RLS: billing pages are gated by the existing permission system. Policies use
 - `src/routes/admin.index.tsx` — billing summary card
 - `src/lib/billing.ts` — shared types/helpers (formatting, balance calc)
 
+&nbsp;
+
+invoice cancellation n modification option give with user privillages. 
+
 ## Out of scope (later phases)
 
 Online payment links, GST/tax lines, report generation module, public-facing billing.
@@ -56,3 +59,4 @@ Online payment links, GST/tax lines, report generation module, public-facing bil
 - Low. Entirely additive: new tables and new admin routes; no existing table or page changes except the nav/dashboard additions.
 - Old invoices are protected from catalogue edits via name/price snapshots on `invoice_items`.
 - Print layout uses the browser's print dialog — verified in preview via Chromium print emulation.
+  &nbsp;
