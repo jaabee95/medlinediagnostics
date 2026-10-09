@@ -148,3 +148,13 @@
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
   .shadow-card { box-shadow: var(--shadow-card); }
 }
+
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; border-radius: 0; padding: 0; }
+  .no-print { display: none !important; }
+  .print-area table { table-layout: fixed; }
+  .print-area th, .print-area td { overflow-wrap: anywhere; }
+  .print-area tr { break-inside: avoid; }
+}
