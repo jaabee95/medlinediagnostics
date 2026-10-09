@@ -1,0 +1,3 @@
+- [ ] Finish staff-only invoice creation, modification/cancellation privileges, payments and referral credit tracking.
+- [ ] Verify A4/A5 print, authenticated billing flow, permission boundaries and existing public pages.
+- [ ] Apply required package security update and confirm preview build.
