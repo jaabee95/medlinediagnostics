@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FlaskConical, Stethoscope, Images, Inbox, ArrowRight, Star, CheckCircle2, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BillingSummary } from "@/components/admin/BillingSummary";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin Dashboard — Medline" }] }),
@@ -96,6 +97,8 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+
+      <BillingSummary />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

@@ -19,11 +19,15 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSlidesRouteImport } from './routes/admin.slides'
 import { Route as AdminServicesRouteImport } from './routes/admin.services'
 import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
+import { Route as AdminReferrersRouteImport } from './routes/admin.referrers'
 import { Route as AdminProfileRouteImport } from './routes/admin.profile'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminEnquiriesRouteImport } from './routes/admin.enquiries'
 import { Route as AdminDoctorsRouteImport } from './routes/admin.doctors'
+import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAccountRouteImport } from './routes/admin.account'
+import { Route as AdminBillingIndexRouteImport } from './routes/admin.billing.index'
+import { Route as AdminBillingIdRouteImport } from './routes/admin.billing.$id'
 
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
@@ -75,6 +79,11 @@ const AdminReviewsRoute = AdminReviewsRouteImport.update({
   path: '/admin/reviews',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminReferrersRoute = AdminReferrersRouteImport.update({
+  id: '/admin/referrers',
+  path: '/admin/referrers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProfileRoute = AdminProfileRouteImport.update({
   id: '/admin/profile',
   path: '/admin/profile',
@@ -95,10 +104,25 @@ const AdminDoctorsRoute = AdminDoctorsRouteImport.update({
   path: '/admin/doctors',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminBillingRoute = AdminBillingRouteImport.update({
+  id: '/admin/billing',
+  path: '/admin/billing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminAccountRoute = AdminAccountRouteImport.update({
   id: '/admin/account',
   path: '/admin/account',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBillingIndexRoute = AdminBillingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminBillingRoute,
+} as any)
+const AdminBillingIdRoute = AdminBillingIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminBillingRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -108,15 +132,19 @@ export interface FileRoutesByFullPath {
   '/reviews': typeof ReviewsRoute
   '/services': typeof ServicesRoute
   '/admin/account': typeof AdminAccountRoute
+  '/admin/billing': typeof AdminBillingRouteWithChildren
   '/admin/doctors': typeof AdminDoctorsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/referrers': typeof AdminReferrersRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/services': typeof AdminServicesRoute
   '/admin/slides': typeof AdminSlidesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/billing/$id': typeof AdminBillingIdRoute
+  '/admin/billing/': typeof AdminBillingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -129,11 +157,14 @@ export interface FileRoutesByTo {
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/referrers': typeof AdminReferrersRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/services': typeof AdminServicesRoute
   '/admin/slides': typeof AdminSlidesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/billing/$id': typeof AdminBillingIdRoute
+  '/admin/billing': typeof AdminBillingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,15 +174,19 @@ export interface FileRoutesById {
   '/reviews': typeof ReviewsRoute
   '/services': typeof ServicesRoute
   '/admin/account': typeof AdminAccountRoute
+  '/admin/billing': typeof AdminBillingRouteWithChildren
   '/admin/doctors': typeof AdminDoctorsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/profile': typeof AdminProfileRoute
+  '/admin/referrers': typeof AdminReferrersRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/services': typeof AdminServicesRoute
   '/admin/slides': typeof AdminSlidesRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/billing/$id': typeof AdminBillingIdRoute
+  '/admin/billing/': typeof AdminBillingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -162,15 +197,19 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/services'
     | '/admin/account'
+    | '/admin/billing'
     | '/admin/doctors'
     | '/admin/enquiries'
     | '/admin/login'
     | '/admin/profile'
+    | '/admin/referrers'
     | '/admin/reviews'
     | '/admin/services'
     | '/admin/slides'
     | '/admin/users'
     | '/admin/'
+    | '/admin/billing/$id'
+    | '/admin/billing/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,11 +222,14 @@ export interface FileRouteTypes {
     | '/admin/enquiries'
     | '/admin/login'
     | '/admin/profile'
+    | '/admin/referrers'
     | '/admin/reviews'
     | '/admin/services'
     | '/admin/slides'
     | '/admin/users'
     | '/admin'
+    | '/admin/billing/$id'
+    | '/admin/billing'
   id:
     | '__root__'
     | '/'
@@ -196,15 +238,19 @@ export interface FileRouteTypes {
     | '/reviews'
     | '/services'
     | '/admin/account'
+    | '/admin/billing'
     | '/admin/doctors'
     | '/admin/enquiries'
     | '/admin/login'
     | '/admin/profile'
+    | '/admin/referrers'
     | '/admin/reviews'
     | '/admin/services'
     | '/admin/slides'
     | '/admin/users'
     | '/admin/'
+    | '/admin/billing/$id'
+    | '/admin/billing/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -214,10 +260,12 @@ export interface RootRouteChildren {
   ReviewsRoute: typeof ReviewsRoute
   ServicesRoute: typeof ServicesRoute
   AdminAccountRoute: typeof AdminAccountRoute
+  AdminBillingRoute: typeof AdminBillingRouteWithChildren
   AdminDoctorsRoute: typeof AdminDoctorsRoute
   AdminEnquiriesRoute: typeof AdminEnquiriesRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminProfileRoute: typeof AdminProfileRoute
+  AdminReferrersRoute: typeof AdminReferrersRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminServicesRoute: typeof AdminServicesRoute
   AdminSlidesRoute: typeof AdminSlidesRoute
@@ -297,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReviewsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/referrers': {
+      id: '/admin/referrers'
+      path: '/admin/referrers'
+      fullPath: '/admin/referrers'
+      preLoaderRoute: typeof AdminReferrersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/profile': {
       id: '/admin/profile'
       path: '/admin/profile'
@@ -325,6 +380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDoctorsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/billing': {
+      id: '/admin/billing'
+      path: '/admin/billing'
+      fullPath: '/admin/billing'
+      preLoaderRoute: typeof AdminBillingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/account': {
       id: '/admin/account'
       path: '/admin/account'
@@ -332,8 +394,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/billing/': {
+      id: '/admin/billing/'
+      path: '/'
+      fullPath: '/admin/billing/'
+      preLoaderRoute: typeof AdminBillingIndexRouteImport
+      parentRoute: typeof AdminBillingRoute
+    }
+    '/admin/billing/$id': {
+      id: '/admin/billing/$id'
+      path: '/$id'
+      fullPath: '/admin/billing/$id'
+      preLoaderRoute: typeof AdminBillingIdRouteImport
+      parentRoute: typeof AdminBillingRoute
+    }
   }
 }
+
+interface AdminBillingRouteChildren {
+  AdminBillingIdRoute: typeof AdminBillingIdRoute
+  AdminBillingIndexRoute: typeof AdminBillingIndexRoute
+}
+
+const AdminBillingRouteChildren: AdminBillingRouteChildren = {
+  AdminBillingIdRoute: AdminBillingIdRoute,
+  AdminBillingIndexRoute: AdminBillingIndexRoute,
+}
+
+const AdminBillingRouteWithChildren = AdminBillingRoute._addFileChildren(
+  AdminBillingRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -342,10 +432,12 @@ const rootRouteChildren: RootRouteChildren = {
   ReviewsRoute: ReviewsRoute,
   ServicesRoute: ServicesRoute,
   AdminAccountRoute: AdminAccountRoute,
+  AdminBillingRoute: AdminBillingRouteWithChildren,
   AdminDoctorsRoute: AdminDoctorsRoute,
   AdminEnquiriesRoute: AdminEnquiriesRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminProfileRoute: AdminProfileRoute,
+  AdminReferrersRoute: AdminReferrersRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminServicesRoute: AdminServicesRoute,
   AdminSlidesRoute: AdminSlidesRoute,

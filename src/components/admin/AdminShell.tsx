@@ -3,6 +3,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Building2, Images, Stethoscope, Star,
   Inbox, Users, KeyRound, LogOut, FlaskConical, Menu,
+  ReceiptText, Network,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ const NAV: { to: string; label: string; icon: any; key: PageKey; exact?: boolean
   { to: "/admin/profile",   label: "Diagnostic Profile", icon: Building2,       key: "profile" },
   { to: "/admin/slides",    label: "Homepage Slider",    icon: Images,          key: "slides" },
   { to: "/admin/services",  label: "Services & Tests",   icon: FlaskConical,    key: "services" },
+  { to: "/admin/billing",   label: "Billing",            icon: ReceiptText,     key: "billing" },
+  { to: "/admin/referrers", label: "Referrers (CRM)",    icon: Network,         key: "referrers" },
   { to: "/admin/doctors",   label: "Doctors",            icon: Stethoscope,     key: "doctors" },
   { to: "/admin/enquiries", label: "Enquiries",          icon: Inbox,           key: "enquiries" },
   { to: "/admin/reviews",   label: "Reviews",            icon: Star,            key: "reviews" },
