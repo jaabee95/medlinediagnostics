@@ -17,9 +17,10 @@ import {
   type Invoice, type Patient, type Payment, type Referrer,
 } from "@/lib/billing";
 import { toast } from "sonner";
+import { billingTotals, mayChangeInvoice } from "@/lib/billing-rules";
 
 export const Route = createFileRoute("/admin/billing/$id")({
-  head: () => ({ meta: [{ title: "Invoice — Admin" }] }),
+  head: () => ({ meta: [{ title: "Invoice — Admin — Medline Diagnostics" }, { name: "description", content: "Invoice — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Invoice — Admin — Medline Diagnostics" }, { property: "og:description", content: "Invoice — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: InvoicePage,
 });
 
@@ -40,6 +41,8 @@ function InvoiceDetail({ id }: { id: string }) {
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null)); }, []);
   const access = useAccess(uid);
   const canEdit = access.can("billing", "edit");
+  const canModify = mayChangeInvoice(access.isAdmin, canEdit, access.can("billing_modify", "edit"));
+  const canCancel = mayChangeInvoice(access.isAdmin, canEdit, access.can("billing_cancel", "edit"));
 
   const [editing, setEditing] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
@@ -50,14 +53,18 @@ function InvoiceDetail({ id }: { id: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["invoice", id],
     queryFn: async () => {
-      const [inv, pay] = await Promise.all([
+      const [inv, pay, itemRows] = await Promise.all([
         supabase.from("invoices").select("*, patient:patients(*), referrer:referrers(*)").eq("id", id).maybeSingle(),
         supabase.from("payments").select("*").eq("invoice_id", id).order("paid_at"),
+        supabase.from("invoice_items").select("*").eq("invoice_id", id).order("id"),
       ]);
       if (inv.error) throw inv.error;
+      if (pay.error) throw pay.error;
+      if (itemRows.error) throw itemRows.error;
       return {
         invoice: inv.data as (Invoice & { patient: Patient | null; referrer: Referrer | null }) | null,
         payments: (pay.data || []) as Payment[],
+        items: itemRows.data || [],
       };
     },
   });
@@ -77,7 +84,6 @@ function InvoiceDetail({ id }: { id: string }) {
   const paid = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
   const balance = Math.max(0, Number(invoice.total) - paid);
 
-  const { data: items = [] } = {} as any; // placeholder to satisfy lint; real items below
 
   return editing ? (
     <InvoiceEditor
@@ -106,31 +112,35 @@ function InvoiceDetail({ id }: { id: string }) {
         <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="mr-1 h-4 w-4" /> Print</Button>
         {invoice.status !== "cancelled" && canEdit && (
           <>
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}><Pencil className="mr-1 h-4 w-4" /> Edit</Button>
+            {canModify && <Button variant="outline" size="sm" onClick={() => setEditing(true)}><Pencil className="mr-1 h-4 w-4" /> Edit</Button>}
             <Button size="sm" onClick={() => setPayOpen(true)} disabled={balance <= 0}>Record Payment</Button>
-            <Button
+            {canCancel && <Button
               variant="destructive"
               size="sm"
               onClick={async () => {
-                if (!confirm("Cancel this invoice? Cancelled invoices cannot be re-opened.")) return;
-                const { error } = await supabase.from("invoices").update({ status: "cancelled" }).eq("id", id);
+                const reason = prompt("Reason for cancellation (payments remain recorded):");
+                if (!reason) return;
+                const { error } = await supabase.rpc("cancel_billing_invoice", { _invoice_id: id, _reason: reason });
                 if (error) return toast.error(error.message);
                 toast.success("Invoice cancelled");
+                qc.invalidateQueries({ queryKey: ["billing-invoices"] });
+                qc.invalidateQueries({ queryKey: ["billing-summary"] });
+                qc.invalidateQueries({ queryKey: ["referrers-crm"] });
                 qc.invalidateQueries({ queryKey: ["invoice", id] });
               }}
             >
               <Ban className="mr-1 h-4 w-4" /> Cancel Invoice
-            </Button>
+            </Button>}
           </>
         )}
       </div>
 
       {invoice.status === "cancelled" && (
-        <div className="no-print rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">This invoice is cancelled.</div>
+        <div className="no-print rounded-lg border border-destructive bg-destructive/10 p-3 text-sm text-destructive">This invoice is cancelled.</div>
       )}
 
       {/* Printable invoice */}
-      <PrintableInvoice invoice={invoice} items={(data as any)?.items || items} payments={payments} dp={dp} paid={paid} balance={balance} />
+      <PrintableInvoice invoice={invoice} items={data?.items || []} payments={payments} dp={dp} paid={paid} balance={balance} />
 
       {/* Payment history */}
       <Card className="no-print">
@@ -161,7 +171,7 @@ function InvoiceDetail({ id }: { id: string }) {
         invoiceId={id}
         balance={balance}
         uid={uid}
-        onSaved={() => { setPayOpen(false); qc.invalidateQueries({ queryKey: ["invoice", id] }); }}
+        onSaved={() => { setPayOpen(false); qc.invalidateQueries({ queryKey: ["invoice", id] }); qc.invalidateQueries({ queryKey: ["billing-invoices"] }); qc.invalidateQueries({ queryKey: ["billing-summary"] }); qc.invalidateQueries({ queryKey: ["referrers-crm"] }); }}
       />
     </div>
   );
@@ -170,24 +180,24 @@ function InvoiceDetail({ id }: { id: string }) {
 function PrintableInvoice({ invoice, items, payments, dp, paid, balance }: any) {
   const addrLines = formatAddressLines(dp);
   return (
-    <div className="print-area rounded-xl border bg-white p-6 text-black">
+    <div className="print-area rounded-lg border bg-card p-4 text-card-foreground sm:p-6">
       {/* Letterhead */}
       <div className="flex items-start justify-between gap-4 border-b pb-4">
         <div className="flex items-center gap-3">
           {dp?.logo_url && <img src={dp.logo_url} alt="" className="h-14 w-14 object-contain" />}
           <div>
-            <div className="text-xl font-bold">{dp?.name || "Medline Diagnostics"}</div>
+            <div className="text-base font-bold sm:text-xl">{dp?.name || "Medline Diagnostics"}</div>
             {dp?.tagline && <div className="text-xs text-muted-foreground">{dp.tagline}</div>}
             {addrLines.map((l: string, i: number) => <div key={i} className="text-xs text-muted-foreground">{l}</div>)}
             {dp?.phone && <div className="mt-0.5 text-xs">Phone: {dp.phone}{dp.whatsapp ? ` · WhatsApp: ${dp.whatsapp}` : ""}</div>}
             {dp?.email && <div className="text-xs">Email: {dp.email}</div>}
           </div>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 text-right">
           <div className="text-lg font-bold uppercase tracking-wide">Invoice</div>
           <div className="text-sm font-semibold">{invoice.invoice_no}</div>
           <div className="text-xs text-muted-foreground">{new Date(invoice.created_at).toLocaleDateString()}</div>
-          {invoice.status === "cancelled" && <div className="mt-1 inline-block rounded bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">CANCELLED</div>}
+          {invoice.status === "cancelled" && <div className="mt-1 inline-block rounded bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive">CANCELLED</div>}
         </div>
       </div>
 
@@ -207,7 +217,7 @@ function PrintableInvoice({ invoice, items, payments, dp, paid, balance }: any) 
       </div>
 
       {/* Items */}
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-xs sm:text-sm">
         <thead>
           <tr className="border-y bg-muted/40 text-left text-xs uppercase tracking-wide">
             <th className="py-2 pr-2">#</th>
@@ -222,7 +232,7 @@ function PrintableInvoice({ invoice, items, payments, dp, paid, balance }: any) 
           {items.map((it: any, i: number) => (
             <tr key={i} className="border-b">
               <td className="py-2 pr-2 text-xs">{i + 1}</td>
-              <td className="py-2 pr-2">{it.name}</td>
+              <td className="py-2 pr-2 break-words">{it.name}</td>
               <td className="py-2 pr-2 text-xs text-muted-foreground">{ITEM_TYPE_LABEL[it.item_type] || it.item_type}</td>
               <td className="py-2 pr-2 text-right">{it.quantity}</td>
               <td className="py-2 pr-2 text-right">{inr(it.price)}</td>
@@ -265,8 +275,8 @@ function PaymentDialog({ open, onClose, invoiceId, balance, uid, onSaved }: {
     const amt = Number(amount);
     if (!amt || amt <= 0) return toast.error("Enter a valid amount");
     setBusy(true);
-    const { error } = await supabase.from("payments").insert({
-      invoice_id: invoiceId, amount: amt, method, notes: notes.trim() || null, received_by: uid,
+    const { error } = await supabase.rpc("record_billing_payment", {
+      _invoice_id: invoiceId, _amount: amt, _method: method, _notes: notes.trim() || undefined,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -305,7 +315,11 @@ function PaymentDialog({ open, onClose, invoiceId, balance, uid, onSaved }: {
 type DraftItem = { item_type: "test" | "test_profile" | "package"; item_id: string | null; name: string; price: number; quantity: number };
 
 function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceId: string) => void; onCancel?: () => void }) {
+  const qc = useQueryClient();
   const isEdit = id !== "new";
+  const [editorUid, setEditorUid] = useState<string | null>(null);
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setEditorUid(data.user?.id ?? null)); }, []);
+  const editorAccess = useAccess(editorUid);
   const [loaded, setLoaded] = useState(!isEdit);
   const [patientId, setPatientId] = useState<string | null>(null);
   const [patientLabel, setPatientLabel] = useState("");
@@ -313,6 +327,7 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
   const [newPatient, setNewPatient] = useState({ name: "", phone: "", age: "", gender: "" });
   const [patientTerm, setPatientTerm] = useState("");
   const [referrerId, setReferrerId] = useState("");
+  const [refTerm, setRefTerm] = useState("");
   const [quickRefOpen, setQuickRefOpen] = useState(false);
   const [items, setItems] = useState<DraftItem[]>([]);
   const [itemTerm, setItemTerm] = useState("");
@@ -347,7 +362,7 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
       const { data, error } = await supabase
         .from("patients")
         .select("id,name,phone")
-        .or(`name.ilike.${term},phone.ilike.${term}`)
+        .or(`name.ilike.${term.replace(/[,().]/g, "")},phone.ilike.${term.replace(/[,().]/g, "")}`)
         .limit(8);
       if (error) return [];
       return data || [];
@@ -387,7 +402,7 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
     return out.slice(0, 12);
   }, [itemTerm, catalog]);
 
-  const subtotal = items.reduce((s, it) => s + Number(it.price) * it.quantity, 0);
+  const subtotal = items.reduce((s, it) => s + Math.round(Number(it.price) * it.quantity * 100) / 100, 0);
   const total = Math.max(0, subtotal - Number(discount || 0));
 
   function addItem(r: { item_type: DraftItem["item_type"]; item_id: string; name: string; price: number }) {
@@ -402,47 +417,22 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
   async function save() {
     setBusy(true);
     try {
-      let pid = patientId;
-      if (!pid) {
-        if (!newPatient.name.trim()) throw new Error("Select an existing patient or enter new patient details");
-        const { data: np, error } = await supabase.from("patients").insert({
-          name: newPatient.name.trim(),
-          phone: newPatient.phone.trim() || null,
-          age: newPatient.age ? Number(newPatient.age) : null,
-          gender: newPatient.gender || null,
-        }).select("id").single();
-        if (error) throw error;
-        pid = np.id;
-      }
-      if (items.length === 0) throw new Error("Add at least one test, profile or package");
-      const sub = items.reduce((s, it) => s + Number(it.price) * it.quantity, 0);
-      const tot = Math.max(0, sub - Number(discount || 0));
-      let invoiceId = id;
-      if (isEdit) {
-        const { error } = await supabase.from("invoices").update({
-          patient_id: pid, referrer_id: referrerId || null,
-          subtotal: sub, discount: Number(discount || 0), total: tot, notes: notes.trim() || null,
-        }).eq("id", id);
-        if (error) throw error;
-        const { error: delErr } = await supabase.from("invoice_items").delete().eq("invoice_id", id);
-        if (delErr) throw delErr;
-      } else {
-        const { data: no, error: noErr } = await supabase.rpc("next_invoice_no");
-        if (noErr) throw noErr;
-        const { data: inv, error } = await supabase.from("invoices").insert({
-          invoice_no: no, patient_id: pid, referrer_id: referrerId || null, status: "issued",
-          subtotal: sub, discount: Number(discount || 0), total: tot, notes: notes.trim() || null,
-        }).select("id").single();
-        if (error) throw error;
-        invoiceId = inv.id;
-      }
-      const { error: itemsErr } = await supabase.from("invoice_items").insert(items.map((it) => ({
-        invoice_id: invoiceId, item_type: it.item_type, item_id: it.item_id,
-        name: it.name, price: it.price, quantity: it.quantity, line_total: Number(it.price) * it.quantity,
-      })));
-      if (itemsErr) throw itemsErr;
+      if (!patientId && !newPatient.name.trim()) throw new Error("Select a patient or enter patient details");
+      billingTotals(items, Number(discount || 0));
+      const { data: invoiceId, error } = await supabase.rpc("save_billing_invoice", {
+        payload: {
+          id: isEdit ? id : null, patient_id: patientId,
+          patient: { ...newPatient }, referrer_id: referrerId || null,
+          items, discount: Number(discount || 0), notes: notes.trim(),
+        },
+      });
+      if (error) throw error;
+      if (!invoiceId) throw new Error("Invoice was not saved");
       toast.success("Invoice saved");
-      onDone(invoiceId!);
+      await qc.invalidateQueries({ queryKey: ["billing-invoices"] });
+      await qc.invalidateQueries({ queryKey: ["billing-summary"] });
+      await qc.invalidateQueries({ queryKey: ["referrers-crm"] });
+      onDone(invoiceId);
     } catch (e: any) {
       toast.error(e.message || "Failed to save invoice");
     } finally {
@@ -450,6 +440,8 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
     }
   }
 
+  if (!editorAccess.isLoaded) return <p className="text-sm text-muted-foreground">Checking access…</p>;
+  if (!editorAccess.can("billing", "edit") || (isEdit && !editorAccess.can("billing_modify", "edit"))) return <p>Invoice edit access is not granted.</p>;
   if (!loaded) return <p className="text-sm text-muted-foreground">Loading invoice…</p>;
 
   return (
@@ -502,14 +494,14 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
               {patientHits.length > 0 && (
                 <div className="rounded-lg border">
                   {patientHits.map((p: any) => (
-                    <button
+                    <Button variant="ghost"
                       key={p.id}
                       type="button"
                       className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
                       onClick={() => { setPatientId(p.id); setPatientLabel(`${p.name}${p.phone ? " · " + p.phone : ""}`); setPatientTerm(""); }}
                     >
                       <span>{p.name}</span><span className="text-xs text-muted-foreground">{p.phone}</span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
@@ -523,11 +515,12 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
       <Card>
         <CardHeader><CardTitle className="text-base">Referral source</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3">
+          <Input aria-label="Search referrers" className="w-full sm:w-56" placeholder="Search referrers" value={refTerm} onChange={(e) => setRefTerm(e.target.value)} />
           <Select value={referrerId || "walkin"} onValueChange={(v) => setReferrerId(v === "walkin" ? "" : v)}>
-            <SelectTrigger className="w-72"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-72"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="walkin">Walk-in</SelectItem>
-              {(referrers as Referrer[]).filter((r) => r.is_active).map((r) => (
+              {(referrers as Referrer[]).filter((r) => (r.is_active || r.id === referrerId) && (r.id === referrerId || r.name.toLowerCase().includes(refTerm.toLowerCase()))).map((r) => (
                 <SelectItem key={r.id} value={r.id}>{r.name} ({r.type})</SelectItem>
               ))}
             </SelectContent>
@@ -547,7 +540,7 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
           {results.length > 0 && (
             <div className="max-h-56 overflow-y-auto rounded-lg border">
               {results.map((r, i) => (
-                <button
+                <Button variant="ghost"
                   key={`${r.item_type}-${r.item_id}-${i}`}
                   type="button"
                   className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
@@ -558,7 +551,7 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
                     <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase">{ITEM_TYPE_LABEL[r.item_type]}</span>
                     <span className="font-medium">{inr(r.price)}</span>
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -572,12 +565,12 @@ function InvoiceEditor({ id, onDone, onCancel }: { id: string; onDone: (invoiceI
                     <div className="text-xs text-muted-foreground">{ITEM_TYPE_LABEL[it.item_type]} · {inr(it.price)} each</div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => setItems(items.map((x, xi) => xi === i ? { ...x, quantity: Math.max(1, x.quantity - 1) } : x))}>−</Button>
+                    <Button aria-label="Change quantity" size="icon" variant="ghost" onClick={() => setItems(items.map((x, xi) => xi === i ? { ...x, quantity: Math.max(1, x.quantity - 1) } : x))}>−</Button>
                     <span className="w-6 text-center text-sm">{it.quantity}</span>
-                    <Button size="icon" variant="ghost" onClick={() => setItems(items.map((x, xi) => xi === i ? { ...x, quantity: x.quantity + 1 } : x))}>+</Button>
+                    <Button aria-label="Change quantity" size="icon" variant="ghost" onClick={() => setItems(items.map((x, xi) => xi === i ? { ...x, quantity: x.quantity + 1 } : x))}>+</Button>
                   </div>
                   <div className="w-20 text-right text-sm font-semibold">{inr(Number(it.price) * it.quantity)}</div>
-                  <Button size="icon" variant="ghost" onClick={() => setItems(items.filter((_, xi) => xi !== i))}><Trash2 className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" aria-label="Remove item" onClick={() => setItems(items.filter((_, xi) => xi !== i))}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               ))}
             </div>

@@ -1,17 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, ReceiptText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccess } from "@/lib/permissions";
 import { inr, payStatus, PAY_STATUS_LABEL, type Invoice } from "@/lib/billing";
 
 export const Route = createFileRoute("/admin/billing/")({
-  head: () => ({ meta: [{ title: "Billing — Admin" }] }),
-  component: () => <AdminShell title="Billing"><InvoiceList /></AdminShell>,
+  head: () => ({ meta: [{ title: "Invoices — Medline Diagnostics Admin" }, { name: "description", content: "Invoices — Medline Diagnostics Admin. Private staff workspace." }, { property: "og:title", content: "Invoices — Medline Diagnostics Admin" }, { property: "og:description", content: "Invoices — Medline Diagnostics Admin. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  component: InvoiceList,
 });
 
 type Row = Invoice & { patient: { name: string; phone: string | null } | null; referrer: { name: string } | null };
@@ -19,6 +20,11 @@ type Row = Invoice & { patient: { name: string; phone: string | null } | null; r
 function InvoiceList() {
   const [tab, setTab] = useState<string>("all");
   const [q, setQ] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [uid, setUid] = useState<string | null>(null);
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null)); }, []);
+  const access = useAccess(uid);
 
   const { data } = useQuery({
     queryKey: ["billing-invoices"],
@@ -30,6 +36,8 @@ function InvoiceList() {
           .order("created_at", { ascending: false }),
         supabase.from("payments").select("invoice_id,amount"),
       ]);
+      if (inv.error) throw inv.error;
+      if (pay.error) throw pay.error;
       return { invoices: (inv.data || []) as Row[], payments: pay.data || [] };
     },
   });
@@ -40,6 +48,8 @@ function InvoiceList() {
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return invoices.filter((i) => {
+      const day = i.created_at.slice(0, 10);
+      if ((fromDate && day < fromDate) || (toDate && day > toDate)) return false;
       if (tab !== "all") {
         const st = payStatus(i, payments);
         if (st !== tab) return false;
@@ -48,13 +58,13 @@ function InvoiceList() {
       const blob = `${i.invoice_no} ${i.patient?.name || ""} ${i.patient?.phone || ""} ${i.referrer?.name || ""}`.toLowerCase();
       return blob.includes(term);
     });
-  }, [invoices, payments, tab, q]);
+  }, [invoices, payments, tab, q, fromDate, toDate]);
 
   const statusBadge = (st: string) => {
     switch (st) {
-      case "paid": return "bg-emerald-100 text-emerald-700";
-      case "partial": return "bg-amber-100 text-amber-700";
-      case "cancelled": return "bg-red-100 text-red-700";
+      case "paid": return "bg-success/10 text-success";
+      case "partial": return "bg-accent text-accent-foreground";
+      case "cancelled": return "bg-destructive/10 text-destructive";
       default: return "bg-primary/10 text-primary";
     }
   };
@@ -63,7 +73,7 @@ function InvoiceList() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs value={tab} onValueChange={(v) => setTab(v)}>
-          <TabsList>
+          <TabsList className="h-auto flex-wrap">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
             <TabsTrigger value="partial">Partial</TabsTrigger>
@@ -71,9 +81,9 @@ function InvoiceList() {
             <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button asChild>
-          <Link to="/admin/billing/new"><Plus className="mr-1 h-4 w-4" /> New Invoice</Link>
-        </Button>
+        {access.can("billing", "edit") && <Button asChild>
+          <Link to="/admin/billing/$id" params={{ id: "new" }}><Plus className="mr-1 h-4 w-4" /> New Invoice</Link>
+        </Button>}
       </div>
 
       <div className="flex max-w-md items-center gap-2 rounded-full border border-border bg-background px-4 py-2">
@@ -86,6 +96,10 @@ function InvoiceList() {
         />
       </div>
 
+      <div className="flex flex-wrap gap-3">
+        <label className="space-y-1 text-xs">From date<Input aria-label="From date" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></label>
+        <label className="space-y-1 text-xs">To date<Input aria-label="To date" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} /></label>
+      </div>
       <div className="space-y-2">
         {filtered.length === 0 && (
           <Card>

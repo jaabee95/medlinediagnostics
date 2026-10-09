@@ -11,7 +11,7 @@ import { Phone, Mail, Trash2, Check, Download } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/enquiries")({
-  head: () => ({ meta: [{ title: "Enquiries — Admin" }] }),
+  head: () => ({ meta: [{ title: "Enquiries — Admin — Medline Diagnostics" }, { name: "description", content: "Enquiries — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Enquiries — Admin — Medline Diagnostics" }, { property: "og:description", content: "Enquiries — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Enquiries"><Enquiries /></AdminShell>,
 });
 

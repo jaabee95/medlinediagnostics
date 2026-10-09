@@ -13,12 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchDiagnosticProfile, formatAddress, telLink, waLink, mapsLink } from "@/lib/site";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({
-    meta: [
-      { title: "Contact — Medline Diagnostics, Trichy" },
-      { name: "description", content: "Visit Medline Diagnostics in Ponnagar, Trichy. Call, WhatsApp or send an enquiry." },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Contact — Medline Diagnostics, Trichy" }, { name: "description", content: "Visit Medline Diagnostics in Ponnagar, Trichy. Call, WhatsApp or send an enquiry." }, { property: "og:title", content: "Contact — Medline Diagnostics, Trichy" }, { property: "og:description", content: "Visit Medline Diagnostics in Ponnagar, Trichy. Call, WhatsApp or send an enquiry." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: ContactPage,
 });
 

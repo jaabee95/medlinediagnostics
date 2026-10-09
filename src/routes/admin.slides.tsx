@@ -15,7 +15,7 @@ import { uploadPublicMedia } from "@/lib/admin-helpers";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/slides")({
-  head: () => ({ meta: [{ title: "Homepage Slider — Admin" }] }),
+  head: () => ({ meta: [{ title: "Homepage Slider — Admin — Medline Diagnostics" }, { name: "description", content: "Homepage Slider — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Homepage Slider — Admin — Medline Diagnostics" }, { property: "og:description", content: "Homepage Slider — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Homepage Slider"><Slides /></AdminShell>,
 });
 

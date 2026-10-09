@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/login")({
-  head: () => ({ meta: [{ title: "Admin Login — Medline Diagnostics" }] }),
+  head: () => ({ meta: [{ title: "Admin Login — Medline Diagnostics" }, { name: "description", content: "Admin Login — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Admin Login — Medline Diagnostics" }, { property: "og:description", content: "Admin Login — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AdminLogin,
 });
 

@@ -15,7 +15,7 @@ import { uploadPublicMedia } from "@/lib/admin-helpers";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/doctors")({
-  head: () => ({ meta: [{ title: "Doctors — Admin" }] }),
+  head: () => ({ meta: [{ title: "Doctors — Admin — Medline Diagnostics" }, { name: "description", content: "Doctors — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:title", content: "Doctors — Admin — Medline Diagnostics" }, { property: "og:description", content: "Doctors — Admin — Medline Diagnostics. Private staff workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => <AdminShell title="Doctors"><Doctors /></AdminShell>,
 });
 

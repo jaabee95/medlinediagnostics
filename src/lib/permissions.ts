@@ -7,6 +7,8 @@ export const ADMIN_PAGES = [
   { key: "slides",     label: "Homepage Slider",    path: "/admin/slides" },
   { key: "services",   label: "Services & Tests",   path: "/admin/services" },
   { key: "billing",    label: "Billing",            path: "/admin/billing" },
+  { key: "billing_modify", label: "Modify invoices", path: "/admin/billing" },
+  { key: "billing_cancel", label: "Cancel invoices", path: "/admin/billing" },
   { key: "referrers",  label: "Referrers (CRM)",    path: "/admin/referrers" },
   { key: "doctors",    label: "Doctors",            path: "/admin/doctors" },
   { key: "enquiries",  label: "Enquiries",          path: "/admin/enquiries" },
