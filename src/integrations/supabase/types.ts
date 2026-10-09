@@ -228,6 +228,8 @@ export type Database = {
       }
       invoices: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_by: string | null
           created_at: string
           created_by: string | null
           discount: number
@@ -242,6 +244,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
           created_at?: string
           created_by?: string | null
           discount?: number
@@ -256,6 +260,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
           created_at?: string
           created_by?: string | null
           discount?: number
@@ -834,6 +840,10 @@ export type Database = {
     Functions: {
       can_access_billing: { Args: { _need_edit?: boolean }; Returns: boolean }
       can_access_referrers: { Args: { _need_edit?: boolean }; Returns: boolean }
+      cancel_billing_invoice: {
+        Args: { _invoice_id: string; _reason: string }
+        Returns: undefined
+      }
       has_page_permission: {
         Args: { _need_edit?: boolean; _page: string; _user_id: string }
         Returns: boolean
@@ -847,6 +857,16 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       next_invoice_no: { Args: never; Returns: string }
+      record_billing_payment: {
+        Args: {
+          _amount: number
+          _invoice_id: string
+          _method: string
+          _notes?: string
+        }
+        Returns: string
+      }
+      save_billing_invoice: { Args: { payload: Json }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "editor" | "staff"

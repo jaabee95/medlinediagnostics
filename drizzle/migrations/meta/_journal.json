@@ -8,6 +8,13 @@
       "when": 1791567056129,
       "tag": "0000_billing_invoices",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791568078857,
+      "tag": "0001_billing_atomic_operations",
+      "breakpoints": true
     }
   ]
 }
